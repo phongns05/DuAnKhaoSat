@@ -1,0 +1,38 @@
+﻿@{
+    ViewData["Title"] = "Trang chủ";
+}
+
+<div class="pb-4">
+    <h1 class="display-6 mb-3">Hệ thống Khảo sát & Đánh giá năng lực</h1>
+    <p class="text-muted">Chào mừng bạn đến với SurveySystem.</p>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Khảo sát của tôi</h5>
+                <p class="card-text">Xem và làm các bài test/khảo sát được giao.</p>
+                <a asp-controller="TestPlayer" asp-action="Index" class="btn btn-primary">Vào làm bài</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Hồ sơ cá nhân</h5>
+                <p class="card-text">Cập nhật thông tin và đổi mật khẩu.</p>
+                <a asp-controller="Account" asp-action="Profile" class="btn btn-outline-primary">Xem hồ sơ</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Khu vực quản trị</h5>
+                <p class="card-text">Quản lý người dùng, câu hỏi, bài test, phân công.</p>
+                <a asp-controller="Users" asp-action="Index" class="btn btn-outline-secondary">Đi tới quản trị</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,36 @@
+@model SurveySystem.Models.TestAttempt
+@{
+    ViewData["Title"] = "Kết quả";
+}
+
+<h2 class="mb-3">@Model.Test.Title - Kết quả</h2>
+<div class="mb-3">
+    <span class="badge bg-success">Điểm: @(Model.Score?.ToString("0.##") ?? "-")</span>
+    <span class="ms-2">Trạng thái: @Model.Status</span>
+    <div>Bắt đầu: @Model.StartTime</div>
+    <div>Kết thúc: @Model.EndTime</div>
+</div>
+
+<ol>
+@foreach (var ans in Model.Answers)
+{
+    <li class="mb-2">
+        <div class="fw-semibold">@ans.Question.Content</div>
+        @if (!string.IsNullOrEmpty(ans.AnswerText))
+        {
+            <div>Trả lời: @ans.AnswerText</div>
+        }
+        else if (ans.Option != null)
+        {
+            <div>Chọn: @ans.Option.Content</div>
+        }
+        @if (ans.IsCorrect.HasValue)
+        {
+            <div>Kết quả: @(ans.IsCorrect.Value ? "Đúng" : "Sai")</div>
+        }
+    </li>
+}
+</ol>
+
+<a class="btn btn-primary" asp-action="Index">Về danh sách</a>
+

@@ -1,0 +1,38 @@
+@model IEnumerable<SurveySystem.Models.Test>
+@{
+    ViewData["Title"] = "Khảo sát được giao";
+    var attempts = ViewData["Attempts"] as IEnumerable<SurveySystem.Models.TestAttempt> ?? Enumerable.Empty<SurveySystem.Models.TestAttempt>();
+}
+
+<h2 class="mb-3">Khảo sát/Bài test được giao</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Tiêu đề</th>
+            <th>Thời lượng (phút)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var t in Model)
+    {
+        var lastAttempt = attempts.FirstOrDefault(a => a.TestId == t.TestId);
+        <tr>
+            <td>@t.Title</td>
+            <td>@t.Duration</td>
+            <td>
+                @if (lastAttempt != null && lastAttempt.Status == "Submitted")
+                {
+                    <a class="btn btn-outline-secondary btn-sm" asp-action="Result" asp-route-id="@lastAttempt.AttemptId">Xem kết quả</a>
+                }
+                else
+                {
+                    <a class="btn btn-primary btn-sm" asp-action="Take" asp-route-id="@t.TestId">Làm ngay</a>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+    
+</table>
+
