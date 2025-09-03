@@ -1,54 +1,70 @@
 ﻿@model SurveySystem.Models.Question
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Chi tiết Question";
 }
 
-<h1>Details</h1>
+<div class="detail-container">
+    <div class="detail-header">
+        <h1 class="detail-title">Chi tiết Question</h1>
+        <p class="detail-subtitle">Thông tin chi tiết về question</p>
+    </div>
 
-<div>
-    <h4>Question</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Content)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Content)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.QuestionType)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.QuestionType)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedDate)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedByNavigation)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedByNavigation.UserId)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Difficulty)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Difficulty.DifficultyId)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Skill)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Skill.SkillId)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.QuestionId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+    <div class="detail-section">
+        <h3 class="detail-section-title">Thông tin cơ bản</h3>
+        
+        <div class="detail-row">
+            <div class="detail-label">Nội dung:</div>
+            <div class="detail-value">@Html.DisplayFor(model => model.Content)</div>
+        </div>
+        
+        <div class="detail-row">
+            <div class="detail-label">Loại câu hỏi:</div>
+            <div class="detail-value">
+                <span class="badge badge-outline-primary">@Html.DisplayFor(model => model.QuestionType)</span>
+            </div>
+        </div>
+        
+        <div class="detail-row">
+            <div class="detail-label">Ngày tạo:</div>
+            <div class="detail-value">@Html.DisplayFor(model => model.CreatedDate)</div>
+        </div>
+    </div>
+
+    <div class="detail-section">
+        <h3 class="detail-section-title">Thông tin liên quan</h3>
+        
+        <div class="detail-row">
+            <div class="detail-label">Người tạo:</div>
+            <div class="detail-value">
+                <span class="badge badge-info">@Html.DisplayFor(model => model.CreatedByNavigation!.UserId)</span>
+            </div>
+        </div>
+        
+        <div class="detail-row">
+            <div class="detail-label">Độ khó:</div>
+            <div class="detail-value">
+                <span class="badge badge-warning">@Html.DisplayFor(model => model.Difficulty!.DifficultyId)</span>
+            </div>
+        </div>
+        
+        <div class="detail-row">
+            <div class="detail-label">Kỹ năng:</div>
+            <div class="detail-value">
+                <span class="badge badge-success">@Html.DisplayFor(model => model.Skill!.SkillId)</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-actions">
+        <a asp-action="Index" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
+        <a asp-action="Edit" asp-route-id="@Model?.QuestionId" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Chỉnh sửa
+        </a>
+        <a asp-action="Delete" asp-route-id="@Model?.QuestionId" class="btn btn-danger">
+            <i class="fas fa-trash"></i> Xóa
+        </a>
+    </div>
 </div>

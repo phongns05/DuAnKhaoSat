@@ -50,7 +50,7 @@ public partial class User
 
     [ForeignKey("RoleId")]
     [InverseProperty("Users")]
-    public virtual Role Role { get; set; } = null!;
+    public virtual Role? Role { get; set; }
 
     [InverseProperty("User")]
     public virtual ICollection<TestAttempt> TestAttempts { get; set; } = new List<TestAttempt>();

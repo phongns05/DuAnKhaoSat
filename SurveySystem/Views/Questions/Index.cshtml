@@ -1,65 +1,118 @@
 ﻿@model IEnumerable<SurveySystem.Models.Question>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Quản lý câu hỏi";
 }
 
-<h1>Index</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Quản lý câu hỏi</h2>
+    <div class="d-flex gap-2">
+        <a asp-action="Import" class="btn btn-outline-primary">
+            <i class="bi bi-upload"></i> Import Excel
+        </a>
+        <a asp-action="Export" class="btn btn-outline-secondary">
+            <i class="bi bi-download"></i> Tải template
+        </a>
+        <a asp-action="Create" class="btn btn-primary">+ Tạo câu hỏi mới</a>
+    </div>
+</div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Content)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.QuestionType)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedByNavigation)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Difficulty)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Skill)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Content)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.QuestionType)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedByNavigation.UserId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Difficulty.DifficultyId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Skill.SkillId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.QuestionId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.QuestionId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.QuestionId">Delete</a>
-            </td>
-        </tr>
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
 }
-    </tbody>
-</table>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    @foreach (var item in Model)
+    {
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge bg-primary">@item.QuestionType</span>
+                        @if (item.Skill != null)
+                        {
+                            <span class="badge bg-info">@item.Skill.SkillName</span>
+                        }
+                        @if (item.Difficulty != null)
+                        {
+                            <span class="badge bg-warning">@item.Difficulty.LevelName</span>
+                        }
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" asp-action="Details" asp-route-id="@item.QuestionId">Chi tiết</a></li>
+                            <li><a class="dropdown-item" asp-action="Edit" asp-route-id="@item.QuestionId">Sửa</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" asp-action="Delete" asp-route-id="@item.QuestionId">Xóa</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h6 class="card-title">@item.Content</h6>
+                    
+                    @if (item.QuestionOptions.Any())
+                    {
+                        <div class="mt-2">
+                            <small class="text-muted">Đáp án:</small>
+                            <ul class="list-unstyled mt-1">
+                                @foreach (var option in item.QuestionOptions)
+                                {
+                                    <li class="mb-1">
+                                        <span class="@(option.IsCorrect == true ? "text-success fw-bold" : "text-muted")">
+                                            @if (option.IsCorrect == true)
+                                            {
+                                                <i class="bi bi-check-circle-fill"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-circle"></i>
+                                            }
+                                            @option.Content
+                                        </span>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                    else if (item.QuestionType == "Essay")
+                    {
+                        <div class="mt-2">
+                            <small class="text-muted">Tự luận - Chấm thủ công</small>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer text-muted">
+                    <small>
+                        Tạo bởi: @(item.CreatedByNavigation?.FullName ?? "N/A") | 
+                        @(item.CreatedDate?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")
+                    </small>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div class="text-center py-5">
+        <i class="bi bi-question-circle display-1 text-muted"></i>
+        <h4 class="text-muted mt-3">Chưa có câu hỏi nào</h4>
+        <p class="text-muted">Bắt đầu tạo câu hỏi đầu tiên để xây dựng ngân hàng câu hỏi.</p>
+        <a asp-action="Create" class="btn btn-primary">Tạo câu hỏi đầu tiên</a>
+    </div>
+}

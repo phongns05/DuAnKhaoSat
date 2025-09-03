@@ -1,45 +1,401 @@
 ﻿@model SurveySystem.Models.Assignment
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Phân công bài test";
+    var tests = ViewBag.Tests as List<SurveySystem.Models.Test>;
+    var users = ViewBag.Users as List<SurveySystem.Models.User>;
+    var departments = ViewBag.Departments as List<SurveySystem.Models.Department>;
 }
 
-<h1>Create</h1>
+<style>
+/* Assignment Create Page Enhancement */
+.assignment-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
 
-<h4>Assignment</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="TestId" class="control-label"></label>
-                <select asp-for="TestId" class ="form-control" asp-items="ViewBag.TestId"></select>
+.assignment-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.assignment-header h2 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.assignment-form {
+    padding: 2rem;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.form-section-title {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.user-selection-card {
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.user-selection-header {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.user-selection-body {
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.user-item {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.user-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-color: #667eea;
+}
+
+.user-checkbox:checked + .form-check-label .user-item {
+    background: #e3f2fd;
+    border-color: #667eea;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.filter-controls .form-select,
+.filter-controls .form-control {
+    flex: 1;
+    min-width: 150px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-outline-primary {
+    background: transparent;
+    color: #667eea;
+    border: 1px solid #667eea;
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    color: #6c757d;
+    border: 1px solid #6c757d;
+}
+
+.selected-count {
+    background: #667eea;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Page Header */
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 0 0 20px 20px;
+}
+
+.page-header h1 {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.page-header p {
+    opacity: 0.9;
+    margin: 0;
+}
+
+/* Responsive */
+@@media (max-width: 768px) {
+    .filter-controls {
+        flex-direction: column;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .assignment-form {
+        padding: 1rem;
+    }
+}
+</style>
+
+<div class="page-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1><i class="fas fa-tasks"></i> Phân công bài test</h1>
+                <p class="mb-0">Tạo assignment mới cho người dùng</p>
             </div>
-            <div class="form-group">
-                <label asp-for="UserId" class="control-label"></label>
-                <select asp-for="UserId" class ="form-control" asp-items="ViewBag.UserId"></select>
+            <div class="col-md-4 text-end">
+                <a asp-action="Index" class="btn btn-outline-light">
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                </a>
             </div>
-            <div class="form-group">
-                <label asp-for="DeptId" class="control-label"></label>
-                <select asp-for="DeptId" class ="form-control" asp-items="ViewBag.DeptId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="Deadline" class="control-label"></label>
-                <input asp-for="Deadline" class="form-control" />
-                <span asp-validation-for="Deadline" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+<div class="container mt-4">
+    <div class="assignment-container">
+        <div class="assignment-header">
+            <h2><i class="fas fa-plus-circle"></i> Tạo assignment mới</h2>
+        </div>
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create" id="assignmentForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <div class="mb-3">
+                <label asp-for="TestId" class="form-label">Chọn bài test</label>
+                <select asp-for="TestId" class="form-select" required>
+                    <option value="">Chọn bài test</option>
+                    @if (tests != null)
+                    {
+                        @foreach (var test in tests)
+                        {
+                            <option value="@test.TestId">@test.Title (@test.TestQuestions.Count câu hỏi)</option>
+                        }
+                    }
+                </select>
+                <span asp-validation-for="TestId" class="text-danger"></span>
+            </div>
+            
+            <div class="mb-3">
+                <label asp-for="DeptId" class="form-label">Phòng ban</label>
+                <select asp-for="DeptId" class="form-select">
+                    <option value="">Tất cả phòng ban</option>
+                    @if (departments != null)
+                    {
+                        @foreach (var dept in departments)
+                        {
+                            <option value="@dept.DeptId">@dept.DeptName</option>
+                        }
+                    }
+                </select>
+                <span asp-validation-for="DeptId" class="text-danger"></span>
+            </div>
+            
+            <div class="mb-3">
+                <label asp-for="Deadline" class="form-label">Hạn chót</label>
+                <input asp-for="Deadline" class="form-control" type="datetime-local" required />
+                <span asp-validation-for="Deadline" class="text-danger"></span>
+            </div>
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Phân công</button>
+                <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+            </div>
+        </form>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Chọn người dùng</h5>
+                <div class="row mt-2">
+                    <div class="col-md-4">
+                        <select id="roleFilter" class="form-select form-select-sm">
+                            <option value="">Tất cả vai trò</option>
+                            <option value="Employee">Nhân viên</option>
+                            <option value="Quản lý">Quản lý</option>
+                            <option value="HR">HR</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="deptFilter" class="form-select form-select-sm">
+                            <option value="">Tất cả phòng ban</option>
+                            @if (departments != null)
+                            {
+                                @foreach (var dept in departments)
+                                {
+                                    <option value="@dept.DeptName">@dept.DeptName</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <input type="text" id="searchUser" class="form-control form-control-sm" placeholder="Tìm kiếm...">
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="selectAll">Chọn tất cả</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAll">Bỏ chọn tất cả</button>
+                    <span class="ms-3 text-muted">Đã chọn: <span id="selectedCount">0</span> người dùng</span>
+                </div>
+            </div>
+            <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                @if (users != null && users.Any())
+                {
+                    <div id="usersList">
+                        @foreach (var user in users)
+                        {
+                            <div class="user-item mb-2 p-2 border rounded" 
+                                 data-role="@(user.Role?.RoleName ?? "")" 
+                                 data-dept="@(user.Depts?.FirstOrDefault()?.DeptName ?? "")" 
+                                 data-name="@user.FullName.ToLower()">
+                                <div class="form-check">
+                                    <input class="form-check-input user-checkbox" type="checkbox" 
+                                           name="selectedUsers" value="@user.UserId" 
+                                           id="user_@user.UserId" form="assignmentForm">
+                                    <label class="form-check-label" for="user_@user.UserId">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>@user.FullName</strong>
+                                                <div class="small text-muted">
+                                                    @user.Email
+                                                </div>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="badge bg-primary">@(user.Role?.RoleName ?? "N/A")</span>
+                                                                                                 @if (user.Depts?.Any() == true)
+                                                 {
+                                                     <span class="badge bg-info">@user.Depts.First().DeptName</span>
+                                                 }
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="bi bi-people display-4 text-muted"></i>
+                        <h5 class="text-muted mt-2">Chưa có người dùng nào</h5>
+                        <p class="text-muted">Vui lòng tạo người dùng trước khi phân công bài test.</p>
+                        <a href="/Users/Create" class="btn btn-primary">Tạo người dùng</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Filter users
+            function filterUsers() {
+                var roleFilter = $('#roleFilter').val();
+                var deptFilter = $('#deptFilter').val();
+                var searchTerm = $('#searchUser').val().toLowerCase();
+                
+                $('.user-item').each(function() {
+                    var item = $(this);
+                    var role = item.data('role');
+                    var dept = item.data('dept');
+                    var name = item.data('name');
+                    
+                    var show = true;
+                    
+                    if (roleFilter && role !== roleFilter) show = false;
+                    if (deptFilter && dept !== deptFilter) show = false;
+                    if (searchTerm && !name.includes(searchTerm)) show = false;
+                    
+                    item.toggle(show);
+                });
+            }
+            
+            $('#roleFilter, #deptFilter').change(filterUsers);
+            $('#searchUser').on('input', filterUsers);
+            
+            // Select all / deselect all
+            $('#selectAll').click(function() {
+                $('.user-checkbox:visible').prop('checked', true);
+                updateSelectedCount();
+            });
+            
+            $('#deselectAll').click(function() {
+                $('.user-checkbox:visible').prop('checked', false);
+                updateSelectedCount();
+            });
+            
+            // Update selected count
+            function updateSelectedCount() {
+                var count = $('.user-checkbox:checked').length;
+                $('#selectedCount').text(count);
+            }
+            
+            $('.user-checkbox').change(updateSelectedCount);
+            updateSelectedCount();
+        });
+    </script>
 }

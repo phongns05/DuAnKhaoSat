@@ -3,36 +3,272 @@
     ViewData["Title"] = "Hồ sơ cá nhân";
 }
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <h2 class="mb-3">Hồ sơ cá nhân</h2>
-        @if (ViewData["Message"] != null)
-        {
-            <div class="alert alert-success">@ViewData["Message"]</div>
-        }
-        <form asp-action="Profile" method="post">
-            <input type="hidden" asp-for="UserId" />
-            <div class="mb-3">
-                <label class="form-label">Họ tên</label>
-                <input asp-for="FullName" class="form-control" />
+<style>
+/* Profile Page Enhancement */
+.profile-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.profile-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+}
+
+.profile-header h2 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.profile-form {
+    padding: 2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+    width: 100%;
+    background-color: white;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    outline: none;
+    background-color: white;
+}
+
+.form-control:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+.btn {
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    margin-right: 0.5rem;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.btn-outline-secondary {
+    background: transparent;
+    color: #6c757d;
+    border: 1px solid #6c757d;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+/* Page Header */
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    border-radius: 0 0 20px 20px;
+}
+
+.page-header h1 {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.page-header p {
+    opacity: 0.9;
+    margin: 0;
+}
+
+/* Responsive */
+@@media (max-width: 768px) {
+    .profile-form {
+        padding: 1rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+        margin-right: 0;
+    }
+}
+</style>
+
+<div class="page-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1><i class="fas fa-user"></i> Hồ sơ cá nhân</h1>
+                <p class="mb-0">Quản lý thông tin cá nhân của bạn</p>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input asp-for="Email" class="form-control" />
+            <div class="col-md-4 text-end">
+                <a asp-action="Index" asp-controller="Home" class="btn btn-outline-light">
+                    <i class="fas fa-home"></i> Trang chủ
+                </a>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Level</label>
-                <input asp-for="Level" class="form-control" />
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Role</label>
-                <input value="@Model.Role?.RoleName" class="form-control" disabled />
-            </div>
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Lưu</button>
-                <a asp-action="ChangePassword" class="btn btn-outline-secondary">Đổi mật khẩu</a>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
+<div class="container mt-4">
+    <div class="profile-container">
+        <div class="profile-header">
+            <h2><i class="fas fa-user-circle"></i> Thông tin cá nhân</h2>
+        </div>
+        
+        <div class="profile-form">
+            @if (ViewData["Message"] != null)
+            {
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> @ViewData["Message"]
+                </div>
+            }
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> @TempData["Success"]
+                </div>
+            }
+            
+            <form asp-action="Profile" method="post" id="profileForm">
+                <input type="hidden" asp-for="UserId" />
+                
+                <div class="form-group">
+                    <label for="FullName">
+                        <i class="fas fa-user"></i> Họ tên
+                    </label>
+                    <input asp-for="FullName" class="form-control" placeholder="Nhập họ tên của bạn" />
+                    <span asp-validation-for="FullName" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="Email">
+                        <i class="fas fa-envelope"></i> Email
+                    </label>
+                    <input asp-for="Email" type="email" class="form-control" placeholder="Nhập email của bạn" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="Level">
+                        <i class="fas fa-star"></i> Level
+                    </label>
+                    <select asp-for="Level" class="form-control">
+                        <option value="">Chọn level</option>
+                        <option value="Junior">Junior</option>
+                        <option value="Middle">Middle</option>
+                        <option value="Senior">Senior</option>
+                        <option value="Lead">Lead</option>
+                        <option value="Manager">Manager</option>
+                    </select>
+                    <span asp-validation-for="Level" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="Role">
+                        <i class="fas fa-user-tag"></i> Role
+                    </label>
+                    <input value="@Model.Role?.RoleName" class="form-control" disabled />
+                    <small class="form-text text-muted">Role không thể thay đổi</small>
+                </div>
+                
+                <div class="action-buttons">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Lưu thay đổi
+                    </button>
+                    <a asp-action="ChangePassword" class="btn btn-outline-secondary">
+                        <i class="fas fa-key"></i> Đổi mật khẩu
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('profileForm');
+    const fullNameInput = form.querySelector('input[name="FullName"]');
+    const emailInput = form.querySelector('input[name="Email"]');
+    const levelSelect = form.querySelector('select[name="Level"]');
+    
+    // Make sure inputs are editable
+    fullNameInput.removeAttribute('readonly');
+    emailInput.removeAttribute('readonly');
+    levelSelect.removeAttribute('disabled');
+    
+    // Add form validation
+    form.addEventListener('submit', function(e) {
+        if (!fullNameInput.value.trim()) {
+            e.preventDefault();
+            alert('Vui lòng nhập họ tên!');
+            fullNameInput.focus();
+            return false;
+        }
+        
+        if (!emailInput.value.trim()) {
+            e.preventDefault();
+            alert('Vui lòng nhập email!');
+            emailInput.focus();
+            return false;
+        }
+        
+        if (!confirm('Bạn có chắc chắn muốn lưu thay đổi?')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+    
+    // Add visual feedback for editable fields
+    const editableInputs = [fullNameInput, emailInput, levelSelect];
+    editableInputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.style.borderColor = '#667eea';
+            this.style.boxShadow = '0 0 0 0.2rem rgba(102, 126, 234, 0.25)';
+        });
+        
+        input.addEventListener('blur', function() {
+            this.style.borderColor = '#ced4da';
+            this.style.boxShadow = 'none';
+        });
+    });
+});
+</script>

@@ -1,75 +1,234 @@
-@model (SurveySystem.Models.Test test, SurveySystem.Models.TestAttempt attempt)
+@model (SurveySystem.Models.Test Test, SurveySystem.Models.TestAttempt Attempt)
 @{
-    ViewData["Title"] = Model.test.Title;
-    var attemptId = (int)ViewData["AttemptId"];
+    ViewData["Title"] = "Làm bài test";
+    var test = Model.Test;
+    var attempt = Model.Attempt;
+    var assignment = ViewData["Assignment"] as SurveySystem.Models.Assignment;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>@Model.test.Title</h2>
-    <div>
-        <span class="badge bg-info text-dark">Thời gian: @Model.test.Duration phút</span>
-        <span class="ms-2" id="timer"></span>
-    </div>
-}</div>
-
-@if (TempData["Message"] != null)
-{
-    <div class="alert alert-success">@TempData["Message"]</div>
-}
-
-<form id="testForm" asp-action="Submit" method="post">
-    <input type="hidden" name="attemptId" value="@attemptId" />
-    <ol>
-        @foreach (var tq in Model.test.TestQuestions)
-        {
-            var q = tq.Question;
-            <li class="mb-3">
-                <div class="fw-semibold mb-1">@q.Content</div>
-                @if ((q.QuestionType ?? "").ToLower().Contains("essay"))
-                {
-                    <textarea class="form-control" name="qtext_@q.QuestionId" rows="3"></textarea>
-                }
-                else
-                {
-                    foreach (var opt in q.QuestionOptions)
-                    {
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="q_@q.QuestionId" value="@opt.OptionId" id="opt_@opt.OptionId">
-                            <label class="form-check-label" for="opt_@opt.OptionId">@opt.Content</label>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Test Header -->
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">@test.Title</h4>
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <small class="text-muted">Thời gian còn lại:</small>
+                            <div id="timer" class="h5 mb-0 text-danger"></div>
                         </div>
+                        <div class="me-3">
+                            <small class="text-muted">Tiến độ:</small>
+                            <div id="progress" class="h6 mb-0">0/@test.TestQuestions.Count</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(test.Description))
+                    {
+                        <p class="mb-2">@test.Description</p>
+                    }
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <small class="text-muted">Thời gian:</small>
+                            <div><strong>@test.Duration phút</strong></div>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted">Số câu hỏi:</small>
+                            <div><strong>@test.TestQuestions.Count</strong></div>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted">Điểm đạt:</small>
+                            <div><strong>@test.PassScore%</strong></div>
+                        </div>
+                        <div class="col-md-3">
+                            <small class="text-muted">Hạn chót:</small>
+                            <div><strong>@(assignment?.Deadline?.ToString("dd/MM/yyyy HH:mm") ?? "Không giới hạn")</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questions -->
+        <div class="col-12">
+            <form id="testForm" method="post">
+                @{
+                    var questionIndex = 1;
+                    foreach (var testQuestion in test.TestQuestions)
+                    {
+                        var question = testQuestion.Question;
+                        var existingAnswer = attempt.Answers.FirstOrDefault(a => a.QuestionId == question.QuestionId);
+                        var answerValue = existingAnswer?.AnswerText ?? "";
+                        
+                        <div class="card mb-4 question-card" data-question-id="@question.QuestionId">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    Câu @questionIndex: 
+                                    <span class="badge bg-primary">@question.QuestionType</span>
+                                    @if (question.Skill != null)
+                                    {
+                                        <span class="badge bg-info">@question.Skill.SkillName</span>
+                                    }
+                                                                         @if (question.Difficulty != null)
+                                     {
+                                         <span class="badge bg-warning">@question.Difficulty.LevelName</span>
+                                     }
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="question-text mb-3">@question.Content</p>
+                                
+                                @if (question.QuestionType == "MCQ")
+                                {
+                                    <div class="options-container">
+                                        @foreach (var option in question.QuestionOptions)
+                                        {
+                                            var isChecked = answerValue.Contains(option.Content);
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input mcq-checkbox" type="checkbox" 
+                                                       name="answer_@question.QuestionId" 
+                                                       value="@option.Content"
+                                                       id="option_@option.OptionId"
+                                                       @(isChecked ? "checked" : "")>
+                                                <label class="form-check-label" for="option_@option.OptionId">
+                                                    @option.Content
+                                                </label>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else if (question.QuestionType == "TrueFalse")
+                                {
+                                    <div class="options-container">
+                                        @foreach (var option in question.QuestionOptions)
+                                        {
+                                            var isChecked = answerValue == option.Content;
+                                            <div class="form-check mb-2">
+                                                <input class="form-check-input" type="radio" 
+                                                       name="answer_@question.QuestionId" 
+                                                       value="@option.Content"
+                                                       id="option_@option.OptionId"
+                                                       @(isChecked ? "checked" : "")>
+                                                <label class="form-check-label" for="option_@option.OptionId">
+                                                    @option.Content
+                                                </label>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                                else if (question.QuestionType == "Essay")
+                                {
+                                    <div class="form-group">
+                                        <textarea class="form-control" 
+                                                  name="answer_@question.QuestionId" 
+                                                  rows="4" 
+                                                  placeholder="Nhập câu trả lời của bạn...">@answerValue</textarea>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        questionIndex++;
                     }
                 }
-            </li>
-        }
-    </ol>
-    <div class="d-flex gap-2">
-        <button formaction="@Url.Action("SaveDraft")" class="btn btn-outline-secondary" type="submit">Lưu nháp</button>
-        <button class="btn btn-primary" type="submit">Nộp bài</button>
-    </div>
-</form>
+            </form>
+        </div>
 
-@section Scripts{
+        <!-- Action Buttons -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <button type="button" class="btn btn-outline-primary me-2" onclick="saveDraft()">
+                        <i class="bi bi-save"></i> Lưu nháp
+                    </button>
+                    <button type="button" class="btn btn-success" onclick="submitTest()">
+                        <i class="bi bi-check-circle"></i> Nộp bài
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
     <script>
-        (function(){
-            const durationMinutes = @Model.test.Duration;
-            const start = new Date("@Model.attempt.StartTime?.ToUniversalTime().ToString("o")");
-            const end = new Date(start.getTime() + durationMinutes*60000);
-            function tick(){
-                const now = new Date();
-                const diff = end - now;
-                const el = document.getElementById('timer');
-                if(diff <= 0){
-                    el.textContent = 'Hết giờ';
-                    document.getElementById('testForm').submit();
-                    return;
+        let timeLeft = @(test.Duration * 60); // Convert minutes to seconds
+        let timerInterval;
+        
+        $(document).ready(function() {
+            startTimer();
+            updateProgress();
+            
+            // Update progress when answers change
+            $('input, textarea').on('change', updateProgress);
+            
+            // Handle MCQ checkboxes
+            $('.mcq-checkbox').on('change', function() {
+                const questionId = $(this).data('question-id');
+                updateMCQValue(questionId);
+            });
+        });
+        
+        function updateMCQValue(questionId) {
+            const checkedValues = $(`.mcq-checkbox[data-question-id="${questionId}"]:checked`).map(function() {
+                return this.value;
+            }).get().join(',');
+            
+            $(`#mcq_combined_${questionId}`).val(checkedValues);
+            updateProgress();
+        }
+        
+        function startTimer() {
+            timerInterval = setInterval(function() {
+                timeLeft--;
+                updateTimer();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert('Hết thời gian làm bài!');
+                    submitTest();
                 }
-                const m = Math.floor(diff/60000);
-                const s = Math.floor((diff%60000)/1000);
-                el.textContent = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-                setTimeout(tick, 1000);
+            }, 1000);
+        }
+        
+        function updateTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            $('#timer').text(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+            
+            if (timeLeft <= 300) { // 5 minutes left
+                $('#timer').addClass('text-danger fw-bold');
             }
-            tick();
-        })();
+        }
+        
+        function updateProgress() {
+            let answeredCount = 0;
+            $('.question-card').each(function() {
+                const questionId = $(this).data('question-id');
+                const hasAnswer = $(`input[name="answer_${questionId}"]`).val().trim() !== '' ||
+                                $(`textarea[name="answer_${questionId}"]`).val().trim() !== '';
+                if (hasAnswer) answeredCount++;
+            });
+            
+            $('#progress').text(`${answeredCount}/${@test.TestQuestions.Count}`);
+        }
+        
+        function saveDraft() {
+            if (confirm('Bạn có chắc muốn lưu nháp?')) {
+                const form = $('#testForm');
+                form.attr('action', '/TestPlayer/SaveDraft?attemptId=@attempt.AttemptId');
+                form.submit();
+            }
+        }
+        
+        function submitTest() {
+            if (confirm('Bạn có chắc muốn nộp bài? Không thể sửa đổi sau khi nộp.')) {
+                const form = $('#testForm');
+                form.attr('action', '/TestPlayer/Submit?attemptId=@attempt.AttemptId');
+                form.submit();
+            }
+        }
     </script>
 }
 

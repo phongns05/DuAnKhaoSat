@@ -1,50 +1,148 @@
 ﻿@model SurveySystem.Models.Question
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Tạo câu hỏi mới";
 }
 
-<h1>Create</h1>
+<h2>Tạo câu hỏi mới</h2>
 
-<h4>Question</h4>
-<hr />
 <div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
+    <div class="col-md-8">
+        <form asp-action="Create" id="questionForm">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Content" class="control-label"></label>
-                <input asp-for="Content" class="form-control" />
+            
+            <div class="mb-3">
+                <label asp-for="Content" class="form-label">Nội dung câu hỏi</label>
+                <textarea asp-for="Content" class="form-control" rows="4" required></textarea>
                 <span asp-validation-for="Content" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="QuestionType" class="control-label"></label>
-                <input asp-for="QuestionType" class="form-control" />
+            
+            <div class="mb-3">
+                <label asp-for="QuestionType" class="form-label">Loại câu hỏi</label>
+                <select asp-for="QuestionType" class="form-select" id="questionType" required>
+                    <option value="">Chọn loại câu hỏi</option>
+                    @foreach (var item in ViewBag.QuestionTypes)
+                    {
+                        <option value="@item.Value">@item.Text</option>
+                    }
+                </select>
                 <span asp-validation-for="QuestionType" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="SkillId" class="control-label"></label>
-                <select asp-for="SkillId" class ="form-control" asp-items="ViewBag.SkillId"></select>
+            
+            <div class="mb-3">
+                <label asp-for="SkillId" class="form-label">Kỹ năng</label>
+                <select asp-for="SkillId" class="form-select" asp-items="ViewBag.SkillId">
+                    <option value="">Chọn kỹ năng</option>
+                </select>
+                <span asp-validation-for="SkillId" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="DifficultyId" class="control-label"></label>
-                <select asp-for="DifficultyId" class ="form-control" asp-items="ViewBag.DifficultyId"></select>
+            
+            <div class="mb-3">
+                <label asp-for="DifficultyId" class="form-label">Độ khó</label>
+                <select asp-for="DifficultyId" class="form-select" asp-items="ViewBag.DifficultyId">
+                    <option value="">Chọn độ khó</option>
+                </select>
+                <span asp-validation-for="DifficultyId" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="CreatedBy" class="control-label"></label>
-                <select asp-for="CreatedBy" class ="form-control" asp-items="ViewBag.CreatedBy"></select>
+            
+            <!-- Options section for MCQ and TrueFalse -->
+            <div id="optionsSection" style="display: none;">
+                <h4>Đáp án</h4>
+                <div id="optionsContainer">
+                    <div class="option-item mb-2">
+                        <div class="input-group">
+                            <div class="input-group-text">
+                                <input type="checkbox" name="isCorrect" value="true" class="form-check-input">
+                            </div>
+                            <input type="text" name="options" class="form-control" placeholder="Nhập đáp án...">
+                            <button type="button" class="btn btn-outline-danger remove-option">Xóa</button>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-primary" id="addOption">+ Thêm đáp án</button>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+            
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Tạo câu hỏi</button>
+                <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Hướng dẫn</h5>
+            </div>
+            <div class="card-body">
+                <h6>Trắc nghiệm (MCQ):</h6>
+                <p>Chọn một hoặc nhiều đáp án đúng</p>
+                
+                <h6>Đúng/Sai:</h6>
+                <p>Chọn đáp án đúng</p>
+                
+                <h6>Tự luận:</h6>
+                <p>Không cần đáp án, sẽ chấm thủ công</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            $('#questionType').change(function() {
+                var type = $(this).val();
+                if (type === 'MCQ' || type === 'TrueFalse') {
+                    $('#optionsSection').show();
+                    if (type === 'TrueFalse') {
+                        // Pre-fill True/False options
+                        $('#optionsContainer').html(`
+                            <div class="option-item mb-2">
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <input type="checkbox" name="isCorrect" value="true" class="form-check-input">
+                                    </div>
+                                    <input type="text" name="options" class="form-control" value="Đúng" readonly>
+                                    <button type="button" class="btn btn-outline-danger remove-option">Xóa</button>
+                                </div>
+                            </div>
+                            <div class="option-item mb-2">
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <input type="checkbox" name="isCorrect" value="true" class="form-check-input">
+                                    </div>
+                                    <input type="text" name="options" class="form-control" value="Sai" readonly>
+                                    <button type="button" class="btn btn-outline-danger remove-option">Xóa</button>
+                                </div>
+                            </div>
+                        `);
+                    }
+                } else {
+                    $('#optionsSection').hide();
+                }
+            });
+            
+            $('#addOption').click(function() {
+                var optionHtml = `
+                    <div class="option-item mb-2">
+                        <div class="input-group">
+                            <div class="input-group-text">
+                                <input type="checkbox" name="isCorrect" value="true" class="form-check-input">
+                            </div>
+                            <input type="text" name="options" class="form-control" placeholder="Nhập đáp án...">
+                            <button type="button" class="btn btn-outline-danger remove-option">Xóa</button>
+                        </div>
+                    </div>
+                `;
+                $('#optionsContainer').append(optionHtml);
+            });
+            
+            $(document).on('click', '.remove-option', function() {
+                $(this).closest('.option-item').remove();
+            });
+        });
+    </script>
 }

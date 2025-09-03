@@ -22,19 +22,23 @@ namespace SurveySystem.Controllers
                 return RedirectToAction("Login", "Account");
 
             var now = DateTime.UtcNow;
-            var assigned = await _db.Assignments
+            
+            // Get assigned tests
+            var assignments = await _db.Assignments
                 .Include(a => a.Test)
-                .Where(a => (a.UserId == userId || a.UserId == null) && (a.Deadline == null || a.Deadline > now))
-                .Select(a => a.Test)
-                .Distinct()
+                .ThenInclude(t => t.TestQuestions)
+                .Where(a => a.UserId == userId && (a.Deadline == null || a.Deadline > now))
                 .ToListAsync();
 
+            // Get test attempts
             var attempts = await _db.TestAttempts
+                .Include(t => t.Test)
                 .Where(t => t.UserId == userId)
+                .OrderByDescending(t => t.StartTime)
                 .ToListAsync();
 
             ViewData["Attempts"] = attempts;
-            return View(assigned);
+            return View(assignments);
         }
 
         [HttpGet]
@@ -43,12 +47,28 @@ namespace SurveySystem.Controllers
             if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
                 return RedirectToAction("Login", "Account");
 
+            // Check if user is assigned to this test
+            var assignment = await _db.Assignments
+                .FirstOrDefaultAsync(a => a.UserId == userId && a.TestId == id);
+            if (assignment == null)
+            {
+                TempData["Error"] = "Bạn không được phân công bài test này.";
+                return RedirectToAction("Index");
+            }
+
             var test = await _db.Tests
                 .Include(t => t.TestQuestions)
                     .ThenInclude(tq => tq.Question)
                         .ThenInclude(q => q.QuestionOptions)
                 .FirstOrDefaultAsync(t => t.TestId == id);
             if (test == null) return NotFound();
+
+            // Check if test is expired
+            if (assignment.Deadline.HasValue && assignment.Deadline.Value < DateTime.UtcNow)
+            {
+                TempData["Error"] = "Bài test đã hết hạn.";
+                return RedirectToAction("Index");
+            }
 
             var attempt = await _db.TestAttempts
                 .Include(a => a.Answers)
@@ -69,6 +89,7 @@ namespace SurveySystem.Controllers
             }
 
             ViewData["AttemptId"] = attempt.AttemptId;
+            ViewData["Assignment"] = assignment;
             return View((test, attempt));
         }
 
@@ -84,8 +105,8 @@ namespace SurveySystem.Controllers
             if (attempt == null) return NotFound();
 
             await PersistAnswersFromForm(attemptId);
-            TempData["Message"] = "Đã lưu nháp";
-            return RedirectToAction("Take", new { id = attempt.TestId });
+            TempData["Success"] = "Đã lưu nháp thành công! Bạn có thể tiếp tục làm bài sau.";
+            return RedirectToAction("Index");
         }
 
         [HttpPost]
@@ -97,106 +118,202 @@ namespace SurveySystem.Controllers
 
             var attempt = await _db.TestAttempts
                 .Include(a => a.Test)
+                .ThenInclude(t => t.TestQuestions)
+                .ThenInclude(tq => tq.Question)
+                .ThenInclude(q => q.QuestionOptions)
                 .FirstOrDefaultAsync(a => a.AttemptId == attemptId && a.UserId == userId);
             if (attempt == null) return NotFound();
 
+            // Save answers
             await PersistAnswersFromForm(attemptId);
 
-            // Auto-grade MCQ/TrueFalse by options IsCorrect
-            var answers = await _db.Answers
-                .Include(ans => ans.Question)
-                .Include(ans => ans.Option)
-                .Where(ans => ans.AttemptId == attemptId)
-                .ToListAsync();
+            // Auto-grade MCQ and TrueFalse questions
+            var totalScore = 0;
+            var totalQuestions = attempt.Test.TestQuestions.Count;
+            var autoGradedQuestions = 0;
 
-            int totalGraded = 0;
-            int correctCount = 0;
-            foreach (var ans in answers)
+
+            System.Diagnostics.Debug.WriteLine($"=== GRADING ATTEMPT {attempt.AttemptId} ===");
+            System.Diagnostics.Debug.WriteLine($"Total questions: {totalQuestions}");
+
+            foreach (var testQuestion in attempt.Test.TestQuestions)
             {
-                var type = ans.Question.QuestionType?.ToLowerInvariant() ?? "";
-                if (type.Contains("mcq") || type.Contains("true") || type.Contains("false") || type.Contains("tf"))
+                var question = testQuestion.Question;
+                var answer = attempt.Answers.FirstOrDefault(a => a.QuestionId == question.QuestionId);
+
+                System.Diagnostics.Debug.WriteLine($"\nQuestion {question.QuestionId}: {question.Content}");
+                System.Diagnostics.Debug.WriteLine($"Question Type: {question.QuestionType}");
+                System.Diagnostics.Debug.WriteLine($"Answer: {answer?.AnswerText ?? "No answer"}");
+                System.Diagnostics.Debug.WriteLine($"Question Options Count: {question.QuestionOptions.Count}");
+
+                if (question.QuestionType == "MCQ" || question.QuestionType == "TrueFalse")
                 {
-                    totalGraded++;
-                    ans.IsCorrect = ans.Option != null && (ans.Option.IsCorrect ?? false);
-                    if (ans.IsCorrect == true) correctCount++;
+                    autoGradedQuestions++;
+                    var isCorrect = answer != null && IsAnswerCorrect(question, answer.AnswerText);
+                    if (isCorrect)
+                    {
+                        totalScore++;
+                        System.Diagnostics.Debug.WriteLine("✓ CORRECT");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("✗ INCORRECT");
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("Manual grading required");
                 }
             }
-            decimal score = 0;
-            if (totalGraded > 0)
-            {
-                score = Math.Round((decimal)correctCount / totalGraded * 100m, 2);
-            }
 
-            attempt.Score = score;
+            System.Diagnostics.Debug.WriteLine($"\n=== FINAL SCORE ===");
+            System.Diagnostics.Debug.WriteLine($"Total Score: {totalScore}/{totalQuestions}");
+            System.Diagnostics.Debug.WriteLine($"Auto-graded: {autoGradedQuestions}/{totalQuestions}");
+
+            // Calculate percentage score
+            var percentageScore = totalQuestions > 0 ? (decimal)((double)totalScore / totalQuestions * 100) : 0;
+
+            // Update attempt
             attempt.EndTime = DateTime.UtcNow;
-            attempt.Status = "Submitted";
+            attempt.Score = percentageScore;
+            attempt.Status = autoGradedQuestions == totalQuestions ? "Completed" : "PendingReview";
+
             await _db.SaveChangesAsync();
 
-            return RedirectToAction("Result", new { id = attempt.AttemptId });
+            TempData["Success"] = "Nộp bài thành công!";
+            return RedirectToAction("Result", new { attemptId = attempt.AttemptId });
         }
 
         [HttpGet]
-        public async Task<IActionResult> Result(int id)
+        public async Task<IActionResult> Result(int attemptId)
         {
             if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
                 return RedirectToAction("Login", "Account");
 
             var attempt = await _db.TestAttempts
                 .Include(a => a.Test)
+                .ThenInclude(t => t.TestQuestions)
+                .ThenInclude(tq => tq.Question)
+                .ThenInclude(q => q.QuestionOptions)
                 .Include(a => a.Answers)
-                    .ThenInclude(ans => ans.Question)
-                .Include(a => a.Answers)
-                    .ThenInclude(ans => ans.Option)
-                .FirstOrDefaultAsync(a => a.AttemptId == id && a.UserId == userId);
+                .FirstOrDefaultAsync(a => a.AttemptId == attemptId && a.UserId == userId);
             if (attempt == null) return NotFound();
+
             return View(attempt);
         }
 
         private async Task PersistAnswersFromForm(int attemptId)
         {
-            // Expect inputs: q_{questionId} for MCQ/TrueFalse (value=optionId); qtext_{questionId} for essay
-            var attempt = await _db.TestAttempts.FirstAsync(a => a.AttemptId == attemptId);
+            var attempt = await _db.TestAttempts
+                .Include(a => a.Answers)
+                .FirstOrDefaultAsync(a => a.AttemptId == attemptId);
+            if (attempt == null) return;
 
-            // Load existing answers
-            var existing = await _db.Answers.Where(a => a.AttemptId == attemptId).ToListAsync();
-            var existingByQuestion = existing.ToDictionary(a => a.QuestionId, a => a);
+            var form = Request.Form;
+            var questionAnswers = new Dictionary<int, List<string>>();
 
-            // Parse form
-            foreach (var key in Request.Form.Keys)
+            // Collect all form values grouped by question ID
+            foreach (var key in form.Keys)
             {
-                if (key.StartsWith("q_"))
+                if (key.StartsWith("answer_"))
                 {
-                    if (int.TryParse(key.AsSpan(2), out var qid))
+                    // Extract question ID from key (handle both "answer_X" format)
+                    var questionIdStr = key.Substring(7); // Remove "answer_" prefix
+                    
+                    if (int.TryParse(questionIdStr, out var questionId))
                     {
-                        var value = Request.Form[key].ToString();
-                        int.TryParse(value, out var optionId);
-                        if (!existingByQuestion.TryGetValue(qid, out var ans))
+                        if (!questionAnswers.ContainsKey(questionId))
                         {
-                            ans = new Answer { AttemptId = attempt.AttemptId, QuestionId = qid };
-                            _db.Answers.Add(ans);
-                            existingByQuestion[qid] = ans;
+                            questionAnswers[questionId] = new List<string>();
                         }
-                        ans.OptionId = optionId == 0 ? null : optionId;
-                        ans.AnswerText = null;
-                    }
-                }
-                else if (key.StartsWith("qtext_"))
-                {
-                    if (int.TryParse(key.AsSpan(6), out var qid))
-                    {
-                        var value = Request.Form[key].ToString();
-                        if (!existingByQuestion.TryGetValue(qid, out var ans))
+
+                        // Get all values for this key (for MCQ multiple selections)
+                        var values = form[key];
+                        foreach (var value in values)
                         {
-                            ans = new Answer { AttemptId = attempt.AttemptId, QuestionId = qid };
-                            _db.Answers.Add(ans);
-                            existingByQuestion[qid] = ans;
+                            if (!string.IsNullOrWhiteSpace(value))
+                            {
+                                questionAnswers[questionId].Add(value);
+                            }
                         }
-                        ans.OptionId = null;
-                        ans.AnswerText = value;
                     }
                 }
             }
+
+            // Save answers to database
+            foreach (var kvp in questionAnswers)
+            {
+                var questionId = kvp.Key;
+                var answerText = string.Join(",", kvp.Value); // Join multiple values with comma
+
+                var existingAnswer = attempt.Answers.FirstOrDefault(a => a.QuestionId == questionId);
+                if (existingAnswer != null)
+                {
+                    existingAnswer.AnswerText = answerText;
+                }
+                else
+                {
+                    attempt.Answers.Add(new Answer
+                    {
+                        QuestionId = questionId,
+                        AnswerText = answerText
+                    });
+                }
+            }
+
             await _db.SaveChangesAsync();
+        }
+
+        private bool IsAnswerCorrect(Question question, string userAnswer)
+        {
+            if (string.IsNullOrEmpty(userAnswer))
+                return false;
+
+            if (question.QuestionType == "MCQ")
+            {
+                // For MCQ, check if user selected all correct options
+                var correctOptions = question.QuestionOptions
+                    .Where(o => o.IsCorrect == true)
+                    .Select(o => o.Content?.Trim())
+                    .Where(c => !string.IsNullOrEmpty(c))
+                    .ToList();
+                
+                var userAnswers = userAnswer.Split(',')
+                    .Select(a => a.Trim())
+                    .Where(a => !string.IsNullOrEmpty(a))
+                    .ToList();
+                
+                // Debug logging
+                System.Diagnostics.Debug.WriteLine($"Question: {question.Content}");
+                System.Diagnostics.Debug.WriteLine($"Correct options: {string.Join(", ", correctOptions)}");
+                System.Diagnostics.Debug.WriteLine($"User answers: {string.Join(", ", userAnswers)}");
+                System.Diagnostics.Debug.WriteLine($"Correct count: {correctOptions.Count}, User count: {userAnswers.Count}");
+                
+                if (correctOptions.Count == 0)
+                {
+                    System.Diagnostics.Debug.WriteLine("No correct options found!");
+                    return false;
+                }
+                
+                var isCorrect = correctOptions.Count == userAnswers.Count && 
+                               correctOptions.All(o => userAnswers.Contains(o));
+                
+                System.Diagnostics.Debug.WriteLine($"Is correct: {isCorrect}");
+                return isCorrect;
+            }
+            else if (question.QuestionType == "TrueFalse")
+            {
+                // For TrueFalse, check if user selected the correct option
+                var correctOption = question.QuestionOptions.FirstOrDefault(o => o.IsCorrect == true);
+                var isCorrect = correctOption != null && 
+                               !string.IsNullOrEmpty(correctOption.Content) && 
+                               correctOption.Content.Trim() == userAnswer.Trim();
+                
+                System.Diagnostics.Debug.WriteLine($"TrueFalse - Correct: {correctOption?.Content}, User: {userAnswer}, IsCorrect: {isCorrect}");
+                return isCorrect;
+            }
+
+            return false;
         }
     }
 }

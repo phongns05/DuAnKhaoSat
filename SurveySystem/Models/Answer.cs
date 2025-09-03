@@ -27,7 +27,7 @@ public partial class Answer
 
     [ForeignKey("AttemptId")]
     [InverseProperty("Answers")]
-    public virtual TestAttempt Attempt { get; set; } = null!;
+    public virtual TestAttempt? Attempt { get; set; }
 
     [ForeignKey("OptionId")]
     [InverseProperty("Answers")]
@@ -35,5 +35,5 @@ public partial class Answer
 
     [ForeignKey("QuestionId")]
     [InverseProperty("Answers")]
-    public virtual Question Question { get; set; } = null!;
+    public virtual Question? Question { get; set; }
 }

@@ -1,65 +1,291 @@
 ﻿@model IEnumerable<SurveySystem.Models.Test>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Quản lý bài test";
 }
 
-<h1>Index</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Title)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Duration)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PassScore)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedByNavigation)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Duration)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PassScore)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedByNavigation.UserId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.TestId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.TestId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.TestId">Delete</a>
-            </td>
-        </tr>
+<style>
+/* Test Cards Enhancement */
+.test-card {
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
 }
-    </tbody>
-</table>
+
+.test-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.test-card .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 1.25rem;
+}
+
+.test-card .card-header h5 {
+    font-weight: 600;
+    margin: 0;
+    color: white;
+}
+
+.test-card .action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.test-card .action-buttons .btn {
+    border-radius: 8px;
+    padding: 0.375rem 0.75rem;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.test-card .action-buttons .btn:hover {
+    transform: scale(1.1);
+}
+
+.test-card .action-buttons .btn-info {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.test-card .action-buttons .btn-warning {
+    background: rgba(255, 193, 7, 0.9);
+    color: #212529;
+}
+
+.test-card .action-buttons .btn-danger {
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+}
+
+.test-card .card-body {
+    padding: 1.5rem;
+}
+
+.test-card .card-footer {
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    padding: 1rem 1.5rem;
+}
+
+/* Test Stats */
+.test-stats {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+.test-stat {
+    flex: 1;
+    padding: 0.5rem;
+}
+
+.test-stat:not(:last-child) {
+    border-right: 1px solid #e9ecef;
+}
+
+.test-stat h6 {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.test-stat strong {
+    color: #495057;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Question Type Badges */
+.question-type-badges {
+    margin-top: 1rem;
+}
+
+.question-type-badges .badge {
+    margin-right: 0.5rem;
+    margin-bottom: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 12px;
+    margin: 2rem 0;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.empty-state h4 {
+    color: #495057;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: #6c757d;
+    margin-bottom: 2rem;
+}
+
+/* Create Button Enhancement */
+.create-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 25px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.create-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    color: white;
+}
+
+/* Alert Enhancement */
+.alert {
+    border: none;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+}
+
+/* Responsive Design for Test Cards */
+@@media (max-width: 768px) {
+    .test-card .action-buttons {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .test-stats {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .test-stat:not(:last-child) {
+        border-right: none;
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 1rem;
+    }
+}
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Quản lý bài test</h2>
+    <a asp-action="Create" class="btn btn-primary create-btn">+ Tạo bài test mới</a>
+</div>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    @foreach (var item in Model)
+    {
+        <div class="col-md-6 mb-3">
+            <div class="card h-100 test-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">@item.Title</h5>
+                    <div class="action-buttons">
+                        <a asp-action="Details" asp-route-id="@item.TestId" class="btn btn-sm btn-info btn-details" title="Xem chi tiết">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a asp-action="Edit" asp-route-id="@item.TestId" class="btn btn-sm btn-warning btn-edit" title="Chỉnh sửa">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@item.TestId" class="btn btn-sm btn-danger btn-delete" title="Xóa">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(item.Description))
+                    {
+                        <p class="card-text">@item.Description</p>
+                    }
+                    
+                    <div class="test-stats">
+                        <div class="test-stat">
+                            <h6>Thời gian</h6>
+                            <strong>@item.Duration phút</strong>
+                        </div>
+                        <div class="test-stat">
+                            <h6>Điểm đạt</h6>
+                            <strong>@item.PassScore%</strong>
+                        </div>
+                        <div class="test-stat">
+                            <h6>Số câu hỏi</h6>
+                            <strong>@item.TestQuestions.Count</strong>
+                        </div>
+                    </div>
+                    
+                    @if (item.TestQuestions.Any())
+                    {
+                        <div class="question-type-badges">
+                            <small class="text-muted">Phân loại câu hỏi:</small>
+                            <div class="mt-1">
+                                @{
+                                    var questionTypes = item.TestQuestions
+                                        .Select(tq => tq.Question.QuestionType)
+                                        .GroupBy(t => t)
+                                        .Select(g => new { Type = g.Key, Count = g.Count() });
+                                }
+                                @foreach (var type in questionTypes)
+                                {
+                                    <span class="badge bg-secondary">@type.Type: @type.Count</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer text-muted">
+                    <small>
+                        Tạo bởi: @(item.CreatedByNavigation?.FullName ?? "N/A") | 
+                        @(item.CreatedDate?.ToString("dd/MM/yyyy HH:mm") ?? "N/A")
+                    </small>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <i class="fas fa-file-alt"></i>
+        <h4>Chưa có bài test nào</h4>
+        <p>Bắt đầu tạo bài test đầu tiên để đánh giá nhân viên.</p>
+        <a asp-action="Create" class="btn btn-primary create-btn">Tạo bài test đầu tiên</a>
+    </div>
+}

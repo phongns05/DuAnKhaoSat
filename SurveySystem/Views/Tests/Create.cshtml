@@ -1,52 +1,244 @@
 ﻿@model SurveySystem.Models.Test
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Tạo bài test mới";
+    var questions = ViewBag.Questions as List<SurveySystem.Models.Question>;
 }
 
-<h1>Create</h1>
+<div class="page-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1><i class="fas fa-plus-circle text-primary"></i> Tạo bài test mới</h1>
+                <p class="text-muted mb-0">Tạo bài test mới với các câu hỏi từ ngân hàng câu hỏi</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
-<h4>Test</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Title" class="control-label"></label>
-                <input asp-for="Title" class="form-control" />
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="form-container">
+                <form asp-action="Create" id="testForm" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label">Tiêu đề bài test</label>
+                <input asp-for="Title" class="form-control" required />
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
+            
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label">Mô tả</label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Duration" class="control-label"></label>
-                <input asp-for="Duration" class="form-control" />
+            
+            <div class="mb-3">
+                <label asp-for="Duration" class="form-label">Thời gian làm bài (phút)</label>
+                <input asp-for="Duration" class="form-control" type="number" min="1" required />
                 <span asp-validation-for="Duration" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="PassScore" class="control-label"></label>
-                <input asp-for="PassScore" class="form-control" />
+            
+            <div class="mb-3">
+                <label asp-for="PassScore" class="form-label">Điểm đạt (0-100)</label>
+                <input asp-for="PassScore" class="form-control" type="number" min="0" max="100" required />
                 <span asp-validation-for="PassScore" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="CreatedBy" class="control-label"></label>
-                <select asp-for="CreatedBy" class ="form-control" asp-items="ViewBag.CreatedBy"></select>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Tạo bài test
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i> Hủy
+                </a>
             </div>
         </form>
     </div>
 </div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
+    
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5>Chọn câu hỏi từ ngân hàng</h5>
+                <div class="row mt-2">
+                    <div class="col-md-4">
+                        <select id="skillFilter" class="form-select form-select-sm">
+                            <option value="">Tất cả kỹ năng</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="difficultyFilter" class="form-select form-select-sm">
+                            <option value="">Tất cả độ khó</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="typeFilter" class="form-select form-select-sm">
+                            <option value="">Tất cả loại</option>
+                            <option value="MCQ">Trắc nghiệm</option>
+                            <option value="TrueFalse">Đúng/Sai</option>
+                            <option value="Essay">Tự luận</option>
+                        </select>
+                    </div>
+                </div>
+                                 <div class="mt-2">
+                     <button type="button" class="btn btn-sm btn-success" id="selectAll">
+                         <i class="fas fa-check-double"></i> Chọn tất cả
+                     </button>
+                     <button type="button" class="btn btn-sm btn-warning" id="deselectAll">
+                         <i class="fas fa-times"></i> Bỏ chọn tất cả
+                     </button>
+                     <span class="ms-3 text-white fw-bold">Đã chọn: <span id="selectedCount" class="badge bg-white text-primary fw-bold">0</span> câu hỏi</span>
+                 </div>
+            </div>
+            <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                @if (questions != null && questions.Any())
+                {
+                    <div id="questionsList">
+                        @foreach (var question in questions)
+                        {
+                            <div class="question-item mb-3 p-3 border rounded" 
+                                 data-skill="@(question.Skill?.SkillName ?? "")" 
+                                 data-difficulty="@(question.Difficulty?.LevelName ?? "")" 
+                                 data-type="@question.QuestionType">
+                                <div class="form-check">
+                                    <input class="form-check-input question-checkbox" type="checkbox" 
+                                           name="selectedQuestions" value="@question.QuestionId" 
+                                           id="question_@question.QuestionId">
+                                    <label class="form-check-label" for="question_@question.QuestionId">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <strong>@question.Content</strong>
+                                                <div class="mt-1">
+                                                    <span class="badge bg-primary">@question.QuestionType</span>
+                                                    @if (question.Skill != null)
+                                                    {
+                                                        <span class="badge bg-info">@question.Skill.SkillName</span>
+                                                    }
+                                                    @if (question.Difficulty != null)
+                                                    {
+                                                                                                                 <span class="badge bg-warning">@question.Difficulty.LevelName</span>
+                                                    }
+                                                </div>
+                                                @if (question.QuestionOptions.Any())
+                                                {
+                                                    <div class="mt-2">
+                                                        <small class="text-muted">Đáp án:</small>
+                                                        <ul class="list-unstyled mt-1">
+                                                            @foreach (var option in question.QuestionOptions)
+                                                            {
+                                                                <li>
+                                                                    <small class="@(option.IsCorrect == true ? "text-success fw-bold" : "text-muted")">
+                                                                        @if (option.IsCorrect == true)
+                                                                        {
+                                                                            <i class="bi bi-check-circle-fill"></i>
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            <i class="bi bi-circle"></i>
+                                                                        }
+                                                                        @option.Content
+                                                                    </small>
+                                                                </li>
+                                                            }
+                                                        </ul>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="bi bi-question-circle display-4 text-muted"></i>
+                        <h5 class="text-muted mt-2">Chưa có câu hỏi nào</h5>
+                        <p class="text-muted">Vui lòng tạo câu hỏi trước khi tạo bài test.</p>
+                        <a href="/Questions/Create" class="btn btn-primary">Tạo câu hỏi</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Populate filters
+            var skills = [...new Set($('.question-item').map(function() {
+                return $(this).data('skill');
+            }).get())].filter(s => s);
+            
+            var difficulties = [...new Set($('.question-item').map(function() {
+                return $(this).data('difficulty');
+            }).get())].filter(d => d);
+            
+            skills.forEach(function(skill) {
+                $('#skillFilter').append(`<option value="${skill}">${skill}</option>`);
+            });
+            
+            difficulties.forEach(function(difficulty) {
+                $('#difficultyFilter').append(`<option value="${difficulty}">${difficulty}</option>`);
+            });
+            
+            // Filter questions
+            function filterQuestions() {
+                var skillFilter = $('#skillFilter').val();
+                var difficultyFilter = $('#difficultyFilter').val();
+                var typeFilter = $('#typeFilter').val();
+                
+                $('.question-item').each(function() {
+                    var item = $(this);
+                    var skill = item.data('skill');
+                    var difficulty = item.data('difficulty');
+                    var type = item.data('type');
+                    
+                    var show = true;
+                    
+                    if (skillFilter && skill !== skillFilter) show = false;
+                    if (difficultyFilter && difficulty !== difficultyFilter) show = false;
+                    if (typeFilter && type !== typeFilter) show = false;
+                    
+                    item.toggle(show);
+                });
+            }
+            
+            $('#skillFilter, #difficultyFilter, #typeFilter').change(filterQuestions);
+            
+            // Select all / deselect all
+            $('#selectAll').click(function() {
+                $('.question-checkbox:visible').prop('checked', true);
+                updateSelectedCount();
+            });
+            
+            $('#deselectAll').click(function() {
+                $('.question-checkbox:visible').prop('checked', false);
+                updateSelectedCount();
+            });
+            
+            // Update selected count
+            function updateSelectedCount() {
+                var count = $('.question-checkbox:checked').length;
+                $('#selectedCount').text(count);
+            }
+            
+            $('.question-checkbox').change(updateSelectedCount);
+            updateSelectedCount();
+        });
+    </script>
 }

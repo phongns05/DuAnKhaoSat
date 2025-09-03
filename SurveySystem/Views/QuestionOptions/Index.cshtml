@@ -1,47 +1,90 @@
 ﻿@model IEnumerable<SurveySystem.Models.QuestionOption>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Quản lý Tùy chọn Câu hỏi";
 }
 
-<h1>Index</h1>
+<div class="page-header">
+    <div class="header-content">
+        <h1><i class="fas fa-list-ul"></i> Quản lý Tùy chọn Câu hỏi</h1>
+        <p>Quản lý các tùy chọn cho câu hỏi trắc nghiệm</p>
+    </div>
+    <div class="header-actions">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Tạo mới
+        </a>
+    </div>
+</div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Content)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsCorrect)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Question)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Content)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsCorrect)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Question.QuestionId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.OptionId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.OptionId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.OptionId">Delete</a>
-            </td>
-        </tr>
+<div class="data-table">
+    <table class="table table-hover">
+        <thead class="table-header">
+            <tr>
+                <th>
+                    <i class="fas fa-list-ul"></i> Nội dung
+                </th>
+                <th>
+                    <i class="fas fa-check-circle"></i> Đáp án đúng
+                </th>
+                <th>
+                    <i class="fas fa-question-circle"></i> Câu hỏi
+                </th>
+                <th class="text-center">
+                    <i class="fas fa-cogs"></i> Thao tác
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr class="table-row">
+                    <td>
+                        <div class="item-info">
+                            <span class="item-name">@Html.DisplayFor(modelItem => item.Content)</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="item-status">
+                            @if (item.IsCorrect == true)
+                            {
+                                <span class="badge bg-success"><i class="fas fa-check"></i> Đúng</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary"><i class="fas fa-times"></i> Sai</span>
+                            }
+                        </div>
+                    </td>
+                    <td>
+                        <div class="item-info">
+                            <span class="item-name">@Html.DisplayFor(modelItem => item.Question!.QuestionId)</span>
+                        </div>
+                    </td>
+                    <td class="action-buttons">
+                        <a asp-action="Edit" asp-route-id="@item.OptionId" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a asp-action="Details" asp-route-id="@item.OptionId" class="btn btn-sm btn-outline-info" title="Chi tiết">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@item.OptionId" class="btn btn-sm btn-outline-danger" title="Xóa">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <i class="fas fa-list-ul"></i>
+        <h3>Chưa có tùy chọn nào</h3>
+        <p>Bắt đầu bằng cách tạo tùy chọn đầu tiên</p>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Tạo tùy chọn
+        </a>
+    </div>
 }
-    </tbody>
-</table>

@@ -1,31 +1,43 @@
 ﻿@model SurveySystem.Models.Difficulty
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Tạo Độ khó Mới";
 }
 
-<h1>Create</h1>
-
-<h4>Difficulty</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="LevelName" class="control-label"></label>
-                <input asp-for="LevelName" class="form-control" />
-                <span asp-validation-for="LevelName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="page-header">
+    <div class="header-content">
+        <h1><i class="fas fa-plus-circle"></i> Tạo Độ khó Mới</h1>
+        <p>Thêm mức độ khó mới vào hệ thống</p>
+    </div>
+    <div class="header-actions">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+<div class="form-container">
+    <form asp-action="Create" class="needs-validation" novalidate>
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        
+        <div class="form-group">
+            <label asp-for="LevelName" class="form-label">
+                <i class="fas fa-layer-group"></i> Tên độ khó <span class="text-danger">*</span>
+            </label>
+            <input asp-for="LevelName" class="form-control" required />
+            <span asp-validation-for="LevelName" class="text-danger"></span>
+            <div class="form-text">Nhập tên độ khó (ví dụ: Junior, Middle, Senior)</div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Tạo độ khó
+            </button>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-times"></i> Hủy
+            </a>
+        </div>
+    </form>
 </div>
 
 @section Scripts {

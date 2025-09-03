@@ -33,7 +33,7 @@ public partial class Assignment
 
     [ForeignKey("TestId")]
     [InverseProperty("Assignments")]
-    public virtual Test Test { get; set; } = null!;
+    public virtual Test? Test { get; set; }
 
     [ForeignKey("UserId")]
     [InverseProperty("Assignments")]

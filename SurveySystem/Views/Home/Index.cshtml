@@ -2,37 +2,224 @@
     ViewData["Title"] = "Trang chủ";
 }
 
-<div class="pb-4">
-    <h1 class="display-6 mb-3">Hệ thống Khảo sát & Đánh giá năng lực</h1>
-    <p class="text-muted">Chào mừng bạn đến với SurveySystem.</p>
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="text-gradient text-center mb-4">
+            <i class="fas fa-clipboard-check me-3"></i>Hệ thống Khảo sát Nhân viên
+        </h1>
+        <p class="text-center text-muted lead">Chào mừng bạn đến với hệ thống quản lý khảo sát và đánh giá năng lực nhân viên</p>
+    </div>
 </div>
 
-<div class="row g-3">
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">Khảo sát của tôi</h5>
-                <p class="card-text">Xem và làm các bài test/khảo sát được giao.</p>
-                <a asp-controller="TestPlayer" asp-action="Index" class="btn btn-primary">Vào làm bài</a>
+@if (User.Identity?.IsAuthenticated ?? false)
+{
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Quản lý Users</h3>
+                    <p>Thêm, sửa, xóa và phân quyền người dùng</p>
+                    <a href="@Url.Action("Index", "Users")" class="btn btn-primary mt-3">
+                        <i class="fas fa-arrow-right me-1"></i>Xem chi tiết
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3>Quản lý Tests</h3>
+                    <p>Tạo và quản lý các bài khảo sát</p>
+                    <a href="@Url.Action("Index", "Tests")" class="btn btn-primary mt-3">
+                        <i class="fas fa-arrow-right me-1"></i>Xem chi tiết
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <h3>Ngân hàng câu hỏi</h3>
+                    <p>Quản lý bộ câu hỏi và import từ Excel</p>
+                    <a href="@Url.Action("Index", "Questions")" class="btn btn-primary mt-3">
+                        <i class="fas fa-arrow-right me-1"></i>Xem chi tiết
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <h3>Phân công Tests</h3>
+                    <p>Giao bài khảo sát cho nhân viên</p>
+                    <a href="@Url.Action("Index", "Assignments")" class="btn btn-primary mt-3">
+                        <i class="fas fa-arrow-right me-1"></i>Xem chi tiết
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="icon">
+                        <i class="fas fa-user-tag"></i>
+                    </div>
+                    <h3>Quản lý Roles</h3>
+                    <p>Phân quyền và vai trò người dùng</p>
+                    <a href="@Url.Action("Index", "Roles")" class="btn btn-outline-primary mt-3">
+                        <i class="fas fa-arrow-right me-1"></i>Xem chi tiết
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h3>Quản lý Departments</h3>
+                    <p>Phòng ban và tổ chức</p>
+                    <a href="@Url.Action("Index", "Departments")" class="btn btn-outline-primary mt-3">
+                        <i class="fas fa-arrow-right me-1"></i>Xem chi tiết
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="dashboard-card">
+                    <div class="icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h3>Quản lý Skills</h3>
+                    <p>Kỹ năng và chuyên môn</p>
+                    <a href="@Url.Action("Index", "Skills")" class="btn btn-outline-primary mt-3">
+                        <i class="fas fa-arrow-right me-1"></i>Xem chi tiết
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-lg-6 col-md-12 mb-4">
+                <div class="dashboard-card">
+                    <div class="icon">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <h3>Bài khảo sát</h3>
+                    <p>Xem và làm các bài khảo sát được giao</p>
+                    <a href="@Url.Action("Index", "TestPlayer")" class="btn btn-primary mt-3">
+                        <i class="fas fa-play me-1"></i>Bắt đầu
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 col-md-12 mb-4">
+                <div class="dashboard-card">
+                    <div class="icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h3>Hồ sơ cá nhân</h3>
+                    <p>Cập nhật thông tin và xem lịch sử</p>
+                    <a href="@Url.Action("Profile", "Account")" class="btn btn-outline-primary mt-3">
+                        <i class="fas fa-user-edit me-1"></i>Xem hồ sơ
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle me-2"></i>Hướng dẫn sử dụng
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="text-center mb-3">
+                                    <i class="fas fa-clipboard-check fa-2x text-primary mb-2"></i>
+                                    <h5>Làm bài khảo sát</h5>
+                                    <p class="text-muted">Truy cập vào mục "Khảo sát" để xem các bài test được giao và bắt đầu làm bài.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center mb-3">
+                                    <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                                    <h5>Quản lý thời gian</h5>
+                                    <p class="text-muted">Mỗi bài test có thời gian giới hạn. Hãy chú ý thời gian và lưu nháp thường xuyên.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center mb-3">
+                                    <i class="fas fa-chart-bar fa-2x text-success mb-2"></i>
+                                    <h5>Xem kết quả</h5>
+                                    <p class="text-muted">Sau khi hoàn thành bài test, bạn có thể xem kết quả và đánh giá chi tiết.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card">
+                <div class="card-header text-center">
+                    <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập để sử dụng hệ thống
+                </div>
+                <div class="card-body text-center">
+                    <p class="lead mb-4">Vui lòng đăng nhập để truy cập các tính năng của hệ thống khảo sát.</p>
+                    <a href="@Url.Action("Login", "Account")" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập ngay
+                    </a>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">Hồ sơ cá nhân</h5>
-                <p class="card-text">Cập nhật thông tin và đổi mật khẩu.</p>
-                <a asp-controller="Account" asp-action="Profile" class="btn btn-outline-primary">Xem hồ sơ</a>
+    
+    <div class="row mt-5">
+        <div class="col-12">
+            <h2 class="text-center text-gradient mb-4">
+                <i class="fas fa-star me-2"></i>Tính năng nổi bật
+            </h2>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                    <h5>Quản lý người dùng</h5>
+                    <p class="text-muted">Hệ thống phân quyền chi tiết với các vai trò Admin, HR, Quản lý và Nhân viên.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-alt fa-3x text-success mb-3"></i>
+                    <h5>Ngân hàng câu hỏi</h5>
+                    <p class="text-muted">Hỗ trợ nhiều loại câu hỏi: Trắc nghiệm, Tự luận, Đúng/Sai với import từ Excel.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-3x text-warning mb-3"></i>
+                    <h5>Báo cáo thống kê</h5>
+                    <p class="text-muted">Thống kê chi tiết theo role, level, skill với xuất báo cáo Excel/PDF.</p>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">Khu vực quản trị</h5>
-                <p class="card-text">Quản lý người dùng, câu hỏi, bài test, phân công.</p>
-                <a asp-controller="Users" asp-action="Index" class="btn btn-outline-secondary">Đi tới quản trị</a>
-            </div>
-        </div>
-    </div>
-</div>
+}

@@ -1,37 +1,53 @@
 ﻿@model SurveySystem.Models.Department
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Chỉnh sửa Phòng ban";
 }
 
-<h1>Edit</h1>
-
-<h4>Department</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="DeptId" />
-            <div class="form-group">
-                <label asp-for="DeptName" class="control-label"></label>
-                <input asp-for="DeptName" class="form-control" />
-                <span asp-validation-for="DeptName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="page-header">
+    <div class="header-content">
+        <h1><i class="fas fa-edit"></i> Chỉnh sửa Phòng ban</h1>
+        <p>Cập nhật thông tin phòng ban</p>
+    </div>
+    <div class="header-actions">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+<div class="form-container">
+    <form asp-action="Edit" class="needs-validation" novalidate>
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        <input type="hidden" asp-for="DeptId" />
+        
+        <div class="form-group">
+            <label asp-for="DeptName" class="form-label">
+                <i class="fas fa-building"></i> Tên phòng ban <span class="text-danger">*</span>
+            </label>
+            <input asp-for="DeptName" class="form-control" required />
+            <span asp-validation-for="DeptName" class="text-danger"></span>
+            <div class="form-text">Nhập tên phòng ban (ví dụ: IT, HR, Marketing)</div>
+        </div>
+        
+        <div class="form-group">
+            <label asp-for="Description" class="form-label">
+                <i class="fas fa-info-circle"></i> Mô tả
+            </label>
+            <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+            <div class="form-text">Mô tả chức năng và nhiệm vụ của phòng ban</div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Lưu thay đổi
+            </button>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-times"></i> Hủy
+            </a>
+        </div>
+    </form>
 </div>
 
 @section Scripts {

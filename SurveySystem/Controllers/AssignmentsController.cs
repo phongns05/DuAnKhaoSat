@@ -7,10 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SurveySystem.Models;
+using System.Security.Claims;
 
 namespace SurveySystem.Controllers
 {
-    [Authorize(Roles = "Admin,HR,Quản lý")]
+    [Authorize(Roles = "Admin")]
     public class AssignmentsController : Controller
     {
         private readonly AppDbContext _context;
@@ -23,8 +24,13 @@ namespace SurveySystem.Controllers
         // GET: Assignments
         public async Task<IActionResult> Index()
         {
-            var appDbContext = _context.Assignments.Include(a => a.Dept).Include(a => a.Test).Include(a => a.User);
-            return View(await appDbContext.ToListAsync());
+            var assignments = await _context.Assignments
+                .Include(a => a.Dept)
+                .Include(a => a.Test)
+                .Include(a => a.User)
+                .OrderByDescending(a => a.AssignedDate)
+                .ToListAsync();
+            return View(assignments);
         }
 
         // GET: Assignments/Details/5
@@ -49,30 +55,111 @@ namespace SurveySystem.Controllers
         }
 
         // GET: Assignments/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["DeptId"] = new SelectList(_context.Departments, "DeptId", "DeptId");
-            ViewData["TestId"] = new SelectList(_context.Tests, "TestId", "TestId");
-            ViewData["UserId"] = new SelectList(_context.Users, "UserId", "UserId");
+            var tests = await _context.Tests
+                .Include(t => t.TestQuestions)
+                .OrderBy(t => t.Title)
+                .ToListAsync();
+
+            var users = await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Depts)
+                .Where(u => u.Status == true)
+                .OrderBy(u => u.FullName)
+                .ToListAsync();
+
+            var departments = await _context.Departments
+                .OrderBy(d => d.DeptName)
+                .ToListAsync();
+
+            ViewBag.Tests = tests;
+            ViewBag.Users = users;
+            ViewBag.Departments = departments;
             return View();
         }
 
         // POST: Assignments/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("AssignId,TestId,UserId,DeptId,AssignedDate,Deadline")] Assignment assignment)
+        public async Task<IActionResult> Create([Bind("TestId,DeptId,Deadline")] Assignment assignment, 
+            List<int> selectedUsers)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(assignment);
-                await _context.SaveChangesAsync();
+                var assignedCount = 0;
+                var errors = new List<string>();
+
+                if (selectedUsers != null && selectedUsers.Any())
+                {
+                    foreach (var userId in selectedUsers)
+                    {
+                        // Check if assignment already exists
+                        var existingAssignment = await _context.Assignments
+                            .FirstOrDefaultAsync(a => a.TestId == assignment.TestId && a.UserId == userId);
+
+                        if (existingAssignment == null)
+                        {
+                            var newAssignment = new Assignment
+                            {
+                                TestId = assignment.TestId,
+                                UserId = userId,
+                                DeptId = assignment.DeptId,
+                                AssignedDate = DateTime.UtcNow,
+                                Deadline = assignment.Deadline
+                            };
+                            _context.Assignments.Add(newAssignment);
+                            assignedCount++;
+                        }
+                        else
+                        {
+                            errors.Add($"User {userId} đã được phân công bài test này");
+                        }
+                    }
+
+                    if (assignedCount > 0)
+                    {
+                        await _context.SaveChangesAsync();
+                        TempData["Message"] = $"Phân công thành công {assignedCount} bài test!";
+                        
+                        if (errors.Any())
+                        {
+                            TempData["Warning"] = string.Join(", ", errors);
+                        }
+                    }
+                    else
+                    {
+                        TempData["Error"] = "Không có bài test nào được phân công mới.";
+                    }
+                }
+                else
+                {
+                    TempData["Error"] = "Vui lòng chọn ít nhất một user.";
+                }
+
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DeptId"] = new SelectList(_context.Departments, "DeptId", "DeptId", assignment.DeptId);
-            ViewData["TestId"] = new SelectList(_context.Tests, "TestId", "TestId", assignment.TestId);
-            ViewData["UserId"] = new SelectList(_context.Users, "UserId", "UserId", assignment.UserId);
+
+            // Reload data for view
+            var tests = await _context.Tests
+                .Include(t => t.TestQuestions)
+                .OrderBy(t => t.Title)
+                .ToListAsync();
+
+            var users = await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Depts)
+                .Where(u => u.Status == true)
+                .OrderBy(u => u.FullName)
+                .ToListAsync();
+
+            var departments = await _context.Departments
+                .OrderBy(d => d.DeptName)
+                .ToListAsync();
+
+            ViewBag.Tests = tests;
+            ViewBag.Users = users;
+            ViewBag.Departments = departments;
             return View(assignment);
         }
 
@@ -84,20 +171,39 @@ namespace SurveySystem.Controllers
                 return NotFound();
             }
 
-            var assignment = await _context.Assignments.FindAsync(id);
+            var assignment = await _context.Assignments
+                .Include(a => a.Test)
+                .Include(a => a.User)
+                .Include(a => a.Dept)
+                .FirstOrDefaultAsync(a => a.AssignId == id);
             if (assignment == null)
             {
                 return NotFound();
             }
-            ViewData["DeptId"] = new SelectList(_context.Departments, "DeptId", "DeptId", assignment.DeptId);
-            ViewData["TestId"] = new SelectList(_context.Tests, "TestId", "TestId", assignment.TestId);
-            ViewData["UserId"] = new SelectList(_context.Users, "UserId", "UserId", assignment.UserId);
+
+            var tests = await _context.Tests
+                .Include(t => t.TestQuestions)
+                .OrderBy(t => t.Title)
+                .ToListAsync();
+
+            var users = await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Depts)
+                .Where(u => u.Status == true)
+                .OrderBy(u => u.FullName)
+                .ToListAsync();
+
+            var departments = await _context.Departments
+                .OrderBy(d => d.DeptName)
+                .ToListAsync();
+
+            ViewBag.Tests = tests;
+            ViewBag.Users = users;
+            ViewBag.Departments = departments;
             return View(assignment);
         }
 
         // POST: Assignments/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("AssignId,TestId,UserId,DeptId,AssignedDate,Deadline")] Assignment assignment)
@@ -113,6 +219,7 @@ namespace SurveySystem.Controllers
                 {
                     _context.Update(assignment);
                     await _context.SaveChangesAsync();
+                    TempData["Message"] = "Cập nhật phân công thành công!";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -127,9 +234,26 @@ namespace SurveySystem.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DeptId"] = new SelectList(_context.Departments, "DeptId", "DeptId", assignment.DeptId);
-            ViewData["TestId"] = new SelectList(_context.Tests, "TestId", "TestId", assignment.TestId);
-            ViewData["UserId"] = new SelectList(_context.Users, "UserId", "UserId", assignment.UserId);
+
+            var tests = await _context.Tests
+                .Include(t => t.TestQuestions)
+                .OrderBy(t => t.Title)
+                .ToListAsync();
+
+            var users = await _context.Users
+                .Include(u => u.Role)
+                .Include(u => u.Depts)
+                .Where(u => u.Status == true)
+                .OrderBy(u => u.FullName)
+                .ToListAsync();
+
+            var departments = await _context.Departments
+                .OrderBy(d => d.DeptName)
+                .ToListAsync();
+
+            ViewBag.Tests = tests;
+            ViewBag.Users = users;
+            ViewBag.Departments = departments;
             return View(assignment);
         }
 
@@ -166,6 +290,7 @@ namespace SurveySystem.Controllers
             }
 
             await _context.SaveChangesAsync();
+            TempData["Message"] = "Xóa phân công thành công!";
             return RedirectToAction(nameof(Index));
         }
 

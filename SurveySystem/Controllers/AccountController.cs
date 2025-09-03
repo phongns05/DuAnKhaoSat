@@ -66,9 +66,9 @@ namespace SurveySystem.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        [Authorize]
+        [AllowAnonymous]
+        [HttpGet]
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync();
@@ -76,9 +76,102 @@ namespace SurveySystem.Controllers
         }
 
         [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> ForceLogout()
+        {
+            // Sign out from authentication
+            await HttpContext.SignOutAsync();
+            
+            // Clear all cookies
+            foreach (var cookie in Request.Cookies.Keys)
+            {
+                Response.Cookies.Delete(cookie);
+            }
+            
+            // Clear session
+            HttpContext.Session?.Clear();
+            
+            return RedirectToAction("Login");
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> ClearAllSessions()
+        {
+            // Sign out from authentication
+            await HttpContext.SignOutAsync();
+            
+            // Clear all cookies with specific options
+            foreach (var cookie in Request.Cookies.Keys)
+            {
+                Response.Cookies.Delete(cookie, new CookieOptions
+                {
+                    Path = "/",
+                    Domain = null,
+                    Secure = false,
+                    HttpOnly = true,
+                    SameSite = SameSiteMode.Lax
+                });
+            }
+            
+            return Json(new { message = "All sessions cleared successfully" });
+        }
+
+        [AllowAnonymous]
         public IActionResult AccessDenied()
         {
             return View();
+        }
+
+        [AllowAnonymous]
+        public async Task<IActionResult> TestUsers()
+        {
+            var users = await _db.Users.Include(u => u.Role).ToListAsync();
+            var result = users.Select(u => new
+            {
+                u.UserId,
+                u.Email,
+                u.FullName,
+                Role = u.Role?.RoleName,
+                u.Status,
+                PasswordHash = u.PasswordHash.Substring(0, Math.Min(20, u.PasswordHash.Length)) + "..."
+            });
+            return Json(result);
+        }
+
+        [AllowAnonymous]
+        public async Task<IActionResult> CreateEmployee()
+        {
+            // Check if employee role exists
+            var employeeRole = await _db.Roles.FirstOrDefaultAsync(r => r.RoleName == "Employee");
+            if (employeeRole == null)
+            {
+                employeeRole = new Role { RoleName = "Employee" };
+                _db.Roles.Add(employeeRole);
+                await _db.SaveChangesAsync();
+            }
+
+            // Check if employee user exists
+            var existingUser = await _db.Users.FirstOrDefaultAsync(u => u.Email == "employee@test.com");
+            if (existingUser == null)
+            {
+                var employeeUser = new User
+                {
+                    Email = "employee@test.com",
+                    FullName = "Nhân viên Test",
+                    PasswordHash = HashPassword("123456"),
+                    Status = true,
+                    RoleId = employeeRole.RoleId,
+                    Level = "Junior"
+                };
+                _db.Users.Add(employeeUser);
+                await _db.SaveChangesAsync();
+                return Json(new { message = "Employee user created successfully", email = "employee@test.com", password = "123456" });
+            }
+            else
+            {
+                return Json(new { message = "Employee user already exists", email = "employee@test.com", password = "123456" });
+            }
         }
 
         [Authorize]
@@ -188,8 +281,8 @@ namespace SurveySystem.Controllers
             }
             user.PasswordHash = HashPassword(newPassword);
             await _db.SaveChangesAsync();
-            ViewData["Message"] = "Đổi mật khẩu thành công";
-            return View();
+            TempData["Success"] = "Đổi mật khẩu thành công";
+            return RedirectToAction("Profile");
         }
 
         private static string HashPassword(string password)

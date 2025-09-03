@@ -1,0 +1,93 @@
+@{
+    ViewData["Title"] = "Import câu hỏi từ Excel";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-upload"></i> Import câu hỏi từ Excel
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle"></i> Hướng dẫn:</h6>
+                        <ul class="mb-0">
+                            <li>File Excel phải có định dạng .xlsx</li>
+                            <li>Dòng đầu tiên là header, dữ liệu bắt đầu từ dòng 2</li>
+                            <li>Các cột theo thứ tự: Nội dung câu hỏi | Loại câu hỏi | Kỹ năng | Độ khó | Đáp án | Đáp án đúng</li>
+                            <li>Loại câu hỏi: MCQ, TrueFalse, Essay</li>
+                            <li>Đáp án và đáp án đúng phân cách bằng dấu |</li>
+                        </ul>
+                    </div>
+
+                    <form asp-action="Import" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="file" class="form-label">Chọn file Excel</label>
+                            <input type="file" class="form-control" id="file" name="file" accept=".xlsx" required />
+                            <div class="form-text">Chỉ hỗ trợ file .xlsx</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-upload"></i> Import
+                            </button>
+                            <a asp-action="Export" class="btn btn-outline-secondary">
+                                <i class="bi bi-download"></i> Tải template
+                            </a>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Quay lại
+                            </a>
+                        </div>
+                    </form>
+
+                    <div class="mt-4">
+                        <h6>Ví dụ dữ liệu:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nội dung câu hỏi</th>
+                                        <th>Loại câu hỏi</th>
+                                        <th>Kỹ năng</th>
+                                        <th>Độ khó</th>
+                                        <th>Đáp án</th>
+                                        <th>Đáp án đúng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>ASP.NET Core là gì?</td>
+                                        <td>MCQ</td>
+                                        <td>Programming</td>
+                                        <td>Junior</td>
+                                        <td>Framework web|Framework desktop|Framework mobile|Framework game</td>
+                                        <td>Framework web</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Entity Framework là ORM?</td>
+                                        <td>TrueFalse</td>
+                                        <td>Database</td>
+                                        <td>Middle</td>
+                                        <td>Đúng|Sai</td>
+                                        <td>Đúng</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Giải thích về Dependency Injection</td>
+                                        <td>Essay</td>
+                                        <td>Programming</td>
+                                        <td>Senior</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

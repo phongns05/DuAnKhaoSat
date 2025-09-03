@@ -26,9 +26,9 @@ public partial class Feedback
 
     [ForeignKey("TestId")]
     [InverseProperty("Feedbacks")]
-    public virtual Test Test { get; set; } = null!;
+    public virtual Test? Test { get; set; }
 
     [ForeignKey("UserId")]
     [InverseProperty("Feedbacks")]
-    public virtual User User { get; set; } = null!;
+    public virtual User? User { get; set; }
 }

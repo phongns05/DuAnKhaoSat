@@ -1,24 +1,49 @@
 ﻿@model SurveySystem.Models.Skill
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Chi tiết Kỹ năng";
 }
 
-<h1>Details</h1>
-
-<div>
-    <h4>Skill</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.SkillName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.SkillName)
-        </dd>
-    </dl>
+<div class="page-header">
+    <div class="header-content">
+        <h1><i class="fas fa-eye"></i> Chi tiết Kỹ năng</h1>
+        <p>Xem thông tin chi tiết kỹ năng</p>
+    </div>
+    <div class="header-actions">
+        <a asp-action="Edit" asp-route-id="@Model.SkillId" class="btn btn-primary">
+            <i class="fas fa-edit"></i> Chỉnh sửa
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.SkillId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+
+<div class="detail-container">
+    <div class="detail-card">
+        <div class="detail-header">
+            <i class="fas fa-brain"></i>
+            <h3>Thông tin Kỹ năng</h3>
+        </div>
+        
+        <div class="detail-body">
+            <div class="detail-row">
+                <div class="detail-label">
+                    <i class="fas fa-brain"></i> Tên kỹ năng:
+                </div>
+                <div class="detail-value">
+                    @Html.DisplayFor(model => model.SkillName)
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="action-buttons">
+    <a asp-action="Edit" asp-route-id="@Model.SkillId" class="btn btn-primary">
+        <i class="fas fa-edit"></i> Chỉnh sửa
+    </a>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fas fa-list"></i> Danh sách
+    </a>
 </div>

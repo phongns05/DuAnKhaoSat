@@ -1,77 +1,83 @@
 ﻿@model IEnumerable<SurveySystem.Models.User>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Quản lý Users";
 }
 
-<h1>Index</h1>
+<div class="page-header">
+    <h1 class="page-title">Quản lý Users</h1>
+    <div class="page-actions">
+        <a asp-action="Create" class="create-btn">Tạo mới</a>
+    </div>
+</div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.FullName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Email)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PasswordHash)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Level)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ResetToken)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ResetTokenExpiry)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Role)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.FullName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Email)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PasswordHash)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Level)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ResetToken)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ResetTokenExpiry)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Role.RoleId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.UserId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.UserId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.UserId">Delete</a>
-            </td>
-        </tr>
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <h3 class="empty-state-title">Chưa có user nào</h3>
+        <p class="empty-state-text">Bắt đầu bằng cách tạo user đầu tiên</p>
+        <a asp-action="Create" class="empty-state-action">Tạo User</a>
+    </div>
 }
-    </tbody>
-</table>
+else
+{
+    <div class="data-table">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Họ tên</th>
+                    <th>Email</th>
+                    <th>Level</th>
+                    <th>Status</th>
+                    <th>Role</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <strong>@Html.DisplayFor(modelItem => item.FullName)</strong>
+                        </td>
+                        <td>
+                            <span class="text-muted">@Html.DisplayFor(modelItem => item.Email)</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-outline-primary">@Html.DisplayFor(modelItem => item.Level)</span>
+                        </td>
+                        <td>
+                            @if (item.Status == true)
+                            {
+                                <span class="badge badge-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-danger">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge badge-info">@Html.DisplayFor(modelItem => item.Role.RoleName)</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a asp-action="Details" asp-route-id="@item.UserId" class="btn-details">
+                                    <i class="fas fa-eye"></i> Chi tiết
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@item.UserId" class="btn-edit">
+                                    <i class="fas fa-edit"></i> Sửa
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.UserId" class="btn-delete">
+                                    <i class="fas fa-trash"></i> Xóa
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

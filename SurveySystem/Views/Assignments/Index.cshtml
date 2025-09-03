@@ -1,59 +1,76 @@
 ﻿@model IEnumerable<SurveySystem.Models.Assignment>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Quản lý Assignments";
 }
 
-<h1>Index</h1>
+<div class="page-header">
+    <h1 class="page-title">Quản lý Assignments</h1>
+    <div class="page-actions">
+        <a asp-action="Create" class="create-btn">Tạo mới</a>
+    </div>
+</div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.AssignedDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Deadline)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Dept)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Test)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.User)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.AssignedDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Deadline)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Dept.DeptId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Test.TestId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.User.UserId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.AssignId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.AssignId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.AssignId">Delete</a>
-            </td>
-        </tr>
+@if (!Model.Any())
+{
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="fas fa-tasks"></i>
+        </div>
+        <h3 class="empty-state-title">Chưa có assignment nào</h3>
+        <p class="empty-state-text">Bắt đầu bằng cách tạo assignment đầu tiên</p>
+        <a asp-action="Create" class="empty-state-action">Tạo Assignment</a>
+    </div>
 }
-    </tbody>
-</table>
+else
+{
+    <div class="data-table">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Ngày giao</th>
+                    <th>Hạn chót</th>
+                    <th>Department</th>
+                    <th>Test</th>
+                    <th>User</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <strong>@Html.DisplayFor(modelItem => item.AssignedDate)</strong>
+                        </td>
+                        <td>
+                            <span class="text-muted">@Html.DisplayFor(modelItem => item.Deadline)</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-outline-primary">@Html.DisplayFor(modelItem => item.Dept!.DeptId)</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-info">@Html.DisplayFor(modelItem => item.Test!.TestId)</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-warning">@Html.DisplayFor(modelItem => item.User!.UserId)</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a asp-action="Details" asp-route-id="@item.AssignId" class="btn-details">
+                                    <i class="fas fa-eye"></i> Chi tiết
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@item.AssignId" class="btn-edit">
+                                    <i class="fas fa-edit"></i> Sửa
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.AssignId" class="btn-delete">
+                                    <i class="fas fa-trash"></i> Xóa
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

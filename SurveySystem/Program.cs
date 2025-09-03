@@ -1,5 +1,9 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Policy;
+using OfficeOpenXml;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -15,6 +19,11 @@ builder.Services.AddDbContext<SurveySystem.Models.AppDbContext>(options =>
     }
 });
 
+
+
+// Register Excel Service
+builder.Services.AddScoped<SurveySystem.Services.ExcelService>();
+
 // Cookie Authentication
 builder.Services.AddAuthentication(options =>
 {
@@ -27,12 +36,20 @@ builder.Services.AddAuthentication(options =>
     options.LoginPath = "/Account/Login";
     options.LogoutPath = "/Account/Logout";
     options.AccessDeniedPath = "/Account/AccessDenied";
-    options.SlidingExpiration = true;
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(5); // 5 minutes for testing
+    options.SlidingExpiration = false; // Disable sliding expiration
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.IsEssential = true;
+    options.Cookie.Name = "SurveySystem.Auth";
+    // Make cookie session-based (not persistent) - will be deleted when browser closes
+    options.Cookie.MaxAge = null;
 });
 
 builder.Services.AddAuthorization(options =>
 {
-    options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+    // Require authentication by default
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();
 });
@@ -51,6 +68,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+
 
 app.UseAuthentication();
 app.UseAuthorization();

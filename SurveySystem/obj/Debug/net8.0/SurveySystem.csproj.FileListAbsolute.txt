@@ -284,4 +284,8 @@ D:\TTS\Survey\SurveySystem\bin\Debug\net8.0\runtimes\win\lib\net7.0\Microsoft.Wi
 D:\TTS\Survey\SurveySystem\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Drawing.Common.dll
 D:\TTS\Survey\SurveySystem\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Security.Cryptography.ProtectedData.dll
 D:\TTS\Survey\SurveySystem\bin\Debug\net8.0\runtimes\win\lib\net7.0\System.Windows.Extensions.dll
-D:\TTS\Survey\SurveySystem\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+D:\TTS\Survey\SurveySystem\obj\Debug\net8.0\SurveySystem.sourcelink.json
+D:\TTS\Survey\SurveySystem\bin\Debug\net8.0\EPPlus.dll
+D:\TTS\Survey\SurveySystem\bin\Debug\net8.0\EPPlus.Interfaces.dll
+D:\TTS\Survey\SurveySystem\bin\Debug\net8.0\Microsoft.IO.RecyclableMemoryStream.dll
+D:\TTS\Survey\SurveySystem\bin\Debug\net8.0\EPPlus.System.Drawing.dll

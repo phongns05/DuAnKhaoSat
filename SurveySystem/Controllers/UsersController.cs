@@ -7,10 +7,12 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SurveySystem.Models;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace SurveySystem.Controllers
 {
-    [Authorize(Roles = "Admin,HR,Quản lý")]
+    [Authorize(Roles = "Admin")]
     public class UsersController : Controller
     {
         private readonly AppDbContext _context;
@@ -49,7 +51,7 @@ namespace SurveySystem.Controllers
         // GET: Users/Create
         public IActionResult Create()
         {
-            ViewData["RoleId"] = new SelectList(_context.Roles, "RoleId", "RoleId");
+            ViewData["RoleId"] = new SelectList(_context.Roles, "RoleId", "RoleName");
             return View();
         }
 
@@ -60,13 +62,42 @@ namespace SurveySystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("UserId,FullName,Email,PasswordHash,RoleId,Level,Status,ResetToken,ResetTokenExpiry")] User user)
         {
+            // Always set ViewData for dropdown
+            ViewData["RoleId"] = new SelectList(_context.Roles, "RoleId", "RoleName", user.RoleId);
+            
+            // Clear any existing Role validation errors
+            ModelState.Remove("Role");
+            
+            // Manual validation for RoleId
+            if (user.RoleId == 0)
+            {
+                ModelState.AddModelError("RoleId", "Vui lòng chọn vai trò");
+            }
+            
             if (ModelState.IsValid)
             {
-                _context.Add(user);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    // Hash password before saving
+                    if (!string.IsNullOrEmpty(user.PasswordHash))
+                    {
+                        user.PasswordHash = HashPassword(user.PasswordHash);
+                    }
+                    
+                    // Set default values
+                    if (user.Status == null)
+                        user.Status = true;
+                    
+                    _context.Add(user);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"Lỗi khi tạo user: {ex.Message}");
+                }
             }
-            ViewData["RoleId"] = new SelectList(_context.Roles, "RoleId", "RoleId", user.RoleId);
+            
             return View(user);
         }
 
@@ -83,7 +114,7 @@ namespace SurveySystem.Controllers
             {
                 return NotFound();
             }
-            ViewData["RoleId"] = new SelectList(_context.Roles, "RoleId", "RoleId", user.RoleId);
+            ViewData["RoleId"] = new SelectList(_context.Roles, "RoleId", "RoleName", user.RoleId);
             return View(user);
         }
 
@@ -99,12 +130,46 @@ namespace SurveySystem.Controllers
                 return NotFound();
             }
 
+            // Always set ViewData for dropdown
+            ViewData["RoleId"] = new SelectList(_context.Roles, "RoleId", "RoleName", user.RoleId);
+            
+            // Clear any existing Role validation errors
+            ModelState.Remove("Role");
+            
+            // Manual validation for RoleId
+            if (user.RoleId == 0)
+            {
+                ModelState.AddModelError("RoleId", "Vui lòng chọn vai trò");
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
+                    // Get existing user to preserve unchanged password
+                    var existingUser = await _context.Users.FindAsync(id);
+                    if (existingUser == null)
+                    {
+                        return NotFound();
+                    }
+
+                    // Only hash password if it's been changed (not empty and different from existing)
+                    if (!string.IsNullOrEmpty(user.PasswordHash) && user.PasswordHash != existingUser.PasswordHash)
+                    {
+                        user.PasswordHash = HashPassword(user.PasswordHash);
+                    }
+                    else
+                    {
+                        // Keep existing password hash
+                        user.PasswordHash = existingUser.PasswordHash;
+                    }
+
+                    // Detach existing user to avoid tracking conflict
+                    _context.Entry(existingUser).State = EntityState.Detached;
+
                     _context.Update(user);
                     await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -117,9 +182,12 @@ namespace SurveySystem.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"Lỗi khi cập nhật user: {ex.Message}");
+                }
             }
-            ViewData["RoleId"] = new SelectList(_context.Roles, "RoleId", "RoleId", user.RoleId);
+            
             return View(user);
         }
 
@@ -160,6 +228,15 @@ namespace SurveySystem.Controllers
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.UserId == id);
+        }
+
+        private static string HashPassword(string password)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return Convert.ToHexString(bytes);
+            }
         }
     }
 }

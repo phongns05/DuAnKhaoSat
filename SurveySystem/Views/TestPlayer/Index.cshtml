@@ -1,4 +1,4 @@
-@model IEnumerable<SurveySystem.Models.Test>
+@model IEnumerable<SurveySystem.Models.Assignment>
 @{
     ViewData["Title"] = "Khảo sát được giao";
     var attempts = ViewData["Attempts"] as IEnumerable<SurveySystem.Models.TestAttempt> ?? Enumerable.Empty<SurveySystem.Models.TestAttempt>();
@@ -10,29 +10,77 @@
         <tr>
             <th>Tiêu đề</th>
             <th>Thời lượng (phút)</th>
+            <th>Hạn nộp</th>
+            <th>Trạng thái</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-    @foreach (var t in Model)
+    @foreach (var assignment in Model)
     {
-        var lastAttempt = attempts.FirstOrDefault(a => a.TestId == t.TestId);
+        var test = assignment.Test;
+        var lastAttempt = attempts.FirstOrDefault(a => a.TestId == test.TestId);
+        var isExpired = assignment.Deadline.HasValue && assignment.Deadline.Value < DateTime.UtcNow;
         <tr>
-            <td>@t.Title</td>
-            <td>@t.Duration</td>
+            <td>@test.Title</td>
+            <td>@test.Duration</td>
             <td>
-                @if (lastAttempt != null && lastAttempt.Status == "Submitted")
+                @if (assignment.Deadline.HasValue)
                 {
-                    <a class="btn btn-outline-secondary btn-sm" asp-action="Result" asp-route-id="@lastAttempt.AttemptId">Xem kết quả</a>
+                    <span class="@(isExpired ? "text-danger" : "text-success")">
+                        @assignment.Deadline.Value.ToString("dd/MM/yyyy HH:mm")
+                    </span>
                 }
                 else
                 {
-                    <a class="btn btn-primary btn-sm" asp-action="Take" asp-route-id="@t.TestId">Làm ngay</a>
+                    <span class="text-muted">Không có hạn</span>
+                }
+            </td>
+            <td>
+                @if (lastAttempt != null)
+                {
+                    if (lastAttempt.Status == "Completed" || lastAttempt.Status == "PendingReview")
+                    {
+                        <span class="badge bg-success">Đã hoàn thành</span>
+                    }
+                    else if (lastAttempt.Status == "InProgress")
+                    {
+                        <span class="badge bg-warning">Đang làm</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-info">@lastAttempt.Status</span>
+                    }
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Chưa làm</span>
+                }
+            </td>
+            <td>
+                @if (lastAttempt != null && (lastAttempt.Status == "Completed" || lastAttempt.Status == "PendingReview"))
+                {
+                    <a class="btn btn-outline-secondary btn-sm" asp-action="Result" asp-route-attemptId="@lastAttempt.AttemptId">Xem kết quả</a>
+                }
+                else if (isExpired)
+                {
+                    <span class="text-danger">Đã hết hạn</span>
+                }
+                else
+                {
+                    <a class="btn btn-primary btn-sm" asp-action="Take" asp-route-id="@test.TestId">Làm ngay</a>
                 }
             </td>
         </tr>
     }
     </tbody>
-    
 </table>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        Bạn chưa có bài khảo sát nào được giao.
+    </div>
+}
 

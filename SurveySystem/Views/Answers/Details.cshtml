@@ -1,48 +1,66 @@
 ﻿@model SurveySystem.Models.Answer
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Chi tiết Answer";
 }
 
-<h1>Details</h1>
+<div class="detail-container">
+    <div class="detail-header">
+        <h1 class="detail-title">Chi tiết Answer</h1>
+        <p class="detail-subtitle">Thông tin chi tiết về answer</p>
+    </div>
 
-<div>
-    <h4>Answer</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AnswerText)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AnswerText)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IsCorrect)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IsCorrect)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Attempt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Attempt.AttemptId)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Option)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Option.OptionId)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Question)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Question.QuestionId)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.AnswerId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+    <div class="detail-section">
+        <h3 class="detail-section-title">Thông tin cơ bản</h3>
+        
+        <div class="detail-row">
+            <div class="detail-label">Nội dung:</div>
+            <div class="detail-value">@Html.DisplayFor(model => model.AnswerText)</div>
+        </div>
+        
+        <div class="detail-row">
+            <div class="detail-label">Đúng/Sai:</div>
+            <div class="detail-value">
+                @if (Model.IsCorrect == true)
+                {
+                    <span class="badge badge-success">Đúng</span>
+                }
+                else
+                {
+                    <span class="badge badge-danger">Sai</span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-section">
+        <h3 class="detail-section-title">Thông tin liên quan</h3>
+        
+        <div class="detail-row">
+            <div class="detail-label">Attempt ID:</div>
+            <div class="detail-value">@Html.DisplayFor(model => model.Attempt!.AttemptId)</div>
+        </div>
+        
+        <div class="detail-row">
+            <div class="detail-label">Option ID:</div>
+            <div class="detail-value">@Html.DisplayFor(model => model.Option!.OptionId)</div>
+        </div>
+        
+        <div class="detail-row">
+            <div class="detail-label">Question ID:</div>
+            <div class="detail-value">@Html.DisplayFor(model => model.Question!.QuestionId)</div>
+        </div>
+    </div>
+
+    <div class="detail-actions">
+        <a asp-action="Index" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
+        <a asp-action="Edit" asp-route-id="@Model?.AnswerId" class="btn btn-warning">
+            <i class="fas fa-edit"></i> Chỉnh sửa
+        </a>
+        <a asp-action="Delete" asp-route-id="@Model?.AnswerId" class="btn btn-danger">
+            <i class="fas fa-trash"></i> Xóa
+        </a>
+    </div>
 </div>

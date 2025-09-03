@@ -21,9 +21,9 @@ public partial class TestQuestion
 
     [ForeignKey("QuestionId")]
     [InverseProperty("TestQuestions")]
-    public virtual Question Question { get; set; } = null!;
+    public virtual Question? Question { get; set; }
 
     [ForeignKey("TestId")]
     [InverseProperty("TestQuestions")]
-    public virtual Test Test { get; set; } = null!;
+    public virtual Test? Test { get; set; }
 }
